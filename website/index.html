@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>everprep</h1>
+        <p class="meta">3m read &middot; 503 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#dump-to-process">Dump to process</a>
+<ul>
+    <li><a href="#knowledge-holes">Knowledge holes</a></li>
+    <li><a href="#sys-design-stuff">Sys design stuff</a></li>
+</ul></li>
+    <li><a href="#misc">Misc</a></li>
+    <li><a href="#external-resources-dump">External resources dump</a></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<p>An ever growing list of things to revise everyday, because I want them to stay in my brain.</p>
+<p>Heavily written by LLMs and my own brain-dumps.</p>
+<p>Highly unpolished infodump. Not intended for public use.</p>
+<hr/>
+<p>I'm easily one of the top engineers in every company I've worked for or consulted. And have been regularly told this by heads of various departments.</p>
+<p>On top of that, I never put any effort or focus into finding a good full time job. And that has led me here.</p>
+<p>Still having to study for interviews is a failure, and a pathetic state to be in.</p>
+<p>Everprep exists to prevent this.</p>
+<blockquote>
+<p>Daily revision of everprep keeps you warmed up.</p>
+<p>I can be laid off in the morning and crack an interview in the same afternoon. There is no need for "I need 2 weeks to study".</p>
+<p>That's the magic of being ready.</p>
+</blockquote>
+<p>These notes are to be revised everyday. They will keep my knowledge sharp and interview ready. 365 days of the year.<br/>
+Once used to the info, revision barely takes 20mins/day, because maintenance is a very low effort thing.</p>
+<p>If I think - "but interview questions don't correspond to real world skill" - then that's the failure of the industry itself.</p>
+<hr/>
+<p>If the industry is gonna gatekeep jobs with its interview games, then that's actually easy mode for me, and I'm gaming the industry back.</p>
+<p>By narrowing the game, it has made it easier for me to get in even into positions I may not be competent enough for. It cuts both ways.</p>
+<p>In choosing a more restricted game, the companies have ended up giving me (and people like me) a very distinct advantage.</p>
+<p>Everprep. Everready.</p>
+<h1 id="dump-to-process">Dump to process</h1>
+<ul>
+<li>Executor tuning - <a href="https://youtu.be/mA96gUESVZc?si=qHNNJMjSGiepj3sc">Afaque</a></li>
+<li><p>DE system design - <a href="https://youtu.be/r58Cf_kc_bY?si=dL7wfHWLjFkbigt3">Afaque</a></p></li>
+<li><p>Delta lake</p>
+<ul>
+<li><a href="https://youtu.be/8IjCyvyAPpM?si=cVS30lOyjqJbm5iS">6h</a></li>
+<li><a href="https://youtu.be/fkWxiesfrgk?si=C2F4rvlqIew7wCL3">3h</a></li>
+</ul></li>
+<li><a href="https://youtu.be/FfMoKQM6oLY?si=TKORzyR8XV2FwPXX">Spark joins</a></li>
+<li><p><a href="https://youtu.be/s8Z8Gex7VFw?si=CvL_SiKJRjtUaKrd">Dynamic partition pruning</a></p></li>
+<li><p><a href="https://www.youtube.com/watch?v=z4Owc8RRApg&amp;pp=ygUVc3BhcmsgY29uY2VwdHMgYWZhcXVl">Spark 30 concepts - Afaque</a></p></li>
+</ul>
+<h2 id="knowledge-holes">Knowledge holes</h2>
+<p>Product sense</p>
+<pre><code>
+Metrics to start out with
+- Engagement metrics
+- Retention metrics
+- Monetization metrics
+- Activation metrics
+
+Segmentation - segment problem across various dimentions
+- Geographic, time etc
+- Platforms (android, ios, web etc)
+</code></pre>
+<ul>
+<li><p>spark</p>
+<ul>
+<li>executor tuning concepts</li>
+<li>data skew</li>
+</ul></li>
+<li><p>How lambda and kappa architectures work - in depth</p></li>
+</ul>
+<h2 id="sys-design-stuff">Sys design stuff</h2>
+<p>Build data model for swiggy/zomato/ig/social media apps</p>
+<p>Make star schema</p>
+<p>Made some bridge tables for handling many to many relationships</p>
+<p>Implementation of scd - practice writing queries for their implementation</p>
+<p>Consider sources like cdc. Design system around capturing cdc ingestion, storage, transformation, building the data mart.</p>
+<h1 id="misc">Misc</h1>
+<p>Must know</p>
+<ul>
+<li>big o intuition</li>
+<li>arrays/binary search/ strings
+<ul>
+<li>2 pointers etc</li>
+</ul></li>
+<li>hashmaps/sets
+<ul>
+<li>count freq, grouping by key, deduplication, checking membership</li>
+</ul></li>
+<li>sorting and searching</li>
+<li>stacks and queues</li>
+</ul>
+<p>overkill</p>
+<ul>
+<li>graph algos</li>
+</ul>
+<h1 id="external-resources-dump">External resources dump</h1>
+<ul>
+<li>System design
+<ul>
+<li><a href="https://www.youtube.com/@SystemDesignInterview/videos">System Design Interview channel</a></li>
+<li><a href="https://www.youtube.com/playlist?list=PLjTveVh7FakLGZ36GbWAk_DMf_0xBZpGv">Jordan has no life - playlist -  Systems Design Questions 3.0</a></li>
+<li>Personal Notes
+<ul>
+<li>Alex Xu's sys design book wasn't good</li>
+<li>HelloInterview is not always correct</li>
+<li>DEDIA is a great book</li>
+</ul></li>
+</ul></li>
+<li><p>Resume review</p>
+<ul>
+<li><a href="https://resumeworded.com/">resumeworded</a></li>
+</ul></li>
+<li><p>Leetcode inspiration (leetcode is fun yo!)</p>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=ApSbjuVHAR8">I SOLVED 750 LEETCODE PROBLEMS and here's what I've learnt</a></li>
+<li><a href="https://www.youtube.com/watch?v=8wysIxzqgPI">My Brain after 569 Leetcode Problems</a></li>
+</ul></li>
+</ul>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            503 words &middot; 3m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-02.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li class="is-current">
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 02 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>

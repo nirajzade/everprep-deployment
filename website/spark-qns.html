@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>spark qns - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>spark qns</h1>
+        <p class="meta">1m read &middot; 40 words</p>
+    </header>
+
+    
+
+    <article class="prose box">
+<p>Ensure data quality in sales pipeline<br/>
+Secure customer PII in data warehouses<br/>
+Manage pipeline orchestraction at walmart scale<br/>
+Optimize spark jobs for terabytes of Point of sale data</p>
+<p>How to ingest and process over 1 million events per day efficiently</p>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            40 words &middot; 1m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-02.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 02 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>

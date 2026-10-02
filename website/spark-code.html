@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>spark - code - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>spark - code</h1>
+        <p class="meta">24m read &middot; 4798 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#case">case</a></li>
+    <li><a href="#filters-where">filters - where</a></li>
+    <li><a href="#join">join</a></li>
+    <li><a href="#window-functions">window functions</a>
+<ul>
+    <li><a href="#define-window">define window</a></li>
+    <li><a href="#ranking">Ranking</a></li>
+    <li><a href="#lag-lead">Lag / lead</a></li>
+    <li><a href="#aggregations">Aggregations</a></li>
+    <li><a href="#first-last">First / last</a></li>
+    <li><a href="#common-patterns">Common patterns</a></li>
+    <li><a href="#other-stuff">Other stuff</a></li>
+</ul></li>
+    <li><a href="#date-and-time-handling">Date and time handling</a>
+<ul>
+    <li><a href="#current-time">Current time</a></li>
+    <li><a href="#convert">Convert</a></li>
+    <li><a href="#arithmetic">Arithmetic</a></li>
+    <li><a href="#extract">Extract</a></li>
+    <li><a href="#boundaries-truncation">Boundaries / truncation</a></li>
+</ul></li>
+    <li><a href="#i-o">I/O</a>
+<ul>
+    <li><a href="#delta-lake">Delta lake</a>
+<ul>
+    <li><a href="#read">read</a></li>
+    <li><a href="#write">write</a></li>
+    <li><a href="#create-table">create table</a></li>
+    <li><a href="#maintenance">maintenance</a></li>
+</ul></li>
+    <li><a href="#kafka">kafka</a>
+<ul>
+    <li><a href="#read-2">read</a></li>
+    <li><a href="#parse-value">parse value</a></li>
+    <li><a href="#write-2">write</a></li>
+</ul></li>
+    <li><a href="#csv">csv</a>
+<ul>
+    <li><a href="#read-3">read</a></li>
+    <li><a href="#options">options</a></li>
+    <li><a href="#write-3">write</a></li>
+</ul></li>
+    <li><a href="#json">json</a>
+<ul>
+    <li><a href="#read-4">read</a></li>
+    <li><a href="#flatten-and-explode-in-1-step">flatten and explode in 1 step</a></li>
+</ul></li>
+    <li><a href="#sqlserver">sqlserver</a></li>
+    <li><a href="#azure-sql-with-aad-token-no-password">azure sql with aad token (no password)</a></li>
+    <li><a href="#read-full-table">read - full table</a></li>
+    <li><a href="#read-query">read - query</a></li>
+    <li><a href="#read-parallel">read - parallel</a></li>
+    <li><a href="#write-4">write</a></li>
+</ul></li>
+    <li><a href="#scd">scd</a></li>
+    <li><a href="#scd-2">SCD</a>
+<ul>
+    <li><a href="#scd-1">scd 1</a></li>
+    <li><a href="#scd-2-2">scd 2</a></li>
+    <li><a href="#scd-3">scd 3</a></li>
+    <li><a href="#scd-4">scd 4</a></li>
+    <li><a href="#scd-5">scd 5</a></li>
+</ul></li>
+    <li><a href="#workflows">Workflows</a>
+<ul>
+    <li><a href="#handle-nulls">Handle nulls</a></li>
+    <li><a href="#deduplicate">Deduplicate</a></li>
+</ul></li>
+    <li><a href="#functions">Functions</a>
+<ul>
+    <li><a href="#group-concat">group_concat</a></li>
+</ul></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<h1 id="case">case</h1>
+<p>when, otherwise</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">when</span><span class="p">,</span> <span class="n">col</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+    <span class="s2">"age_group"</span><span class="p">,</span>
+    <span class="n">when</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span><span class="o">.</span><span class="n">isNull</span><span class="p">(),</span>  <span class="s2">"unknown"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span>      <span class="s2">"invalid"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">18</span><span class="p">,</span>     <span class="s2">"minor"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="s2">"adult"</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h1 id="filters-where">filters - where</h1>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># multiple conditions</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">col</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"city"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"delhi"</span><span class="p">))</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">"age &gt; 18 AND city = 'delhi'"</span><span class="p">)</span> <span class="c1"># SQL string - same result</span>
+
+<span class="c1"># in</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"city"</span><span class="p">)</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="s2">"pune"</span><span class="p">,</span> <span class="s2">"mumbai"</span><span class="p">))</span>
+<span class="c1"># not in</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">col</span><span class="p">(</span><span class="s2">"city"</span><span class="p">)</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="s2">"pune"</span><span class="p">,</span> <span class="s2">"mumbai"</span><span class="p">))</span>
+
+<span class="c1"># between - inclusive (lowerBound &lt;= val &lt;= upperbound)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span>
+
+<span class="c1"># date</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"dt"</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="s2">"2024-01-01"</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"dt"</span><span class="p">)</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="s2">"2024-12-31"</span><span class="p">))</span>
+
+<span class="c1"># filter JSON</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"address.city"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"pune"</span><span class="p">)</span>
+
+<span class="c1"># filter array — check if value exists in array</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_contains</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">array_contains</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"tags"</span><span class="p">),</span> <span class="s2">"premium"</span><span class="p">))</span>
+
+<span class="c1"># after explode</span>
+<span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"order.amt"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">)</span>
+</code></pre>
+</div>
+<h1 id="join">join</h1>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df1</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df2</span><span class="p">,</span> <span class="n">df1</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">df2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s2">"inner"</span><span class="p">)</span>
+</code></pre>
+</div>
+<ol>
+<li>inner</li>
+<li>left</li>
+<li>right</li>
+<li>full</li>
+<li>left_semi</li>
+<li>left_anti</li>
+<li>cross</li>
+</ol>
+<p>Join with aliases</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">a</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"b"</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+    <span class="n">b</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">country</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">country</span><span class="p">),</span> <span class="c1"># Use `&amp;`, not Python `and`.</span>
+    <span class="s2">"inner"</span>
+<span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"a.*"</span><span class="p">),</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"b.name"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"city_name"</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<p>Hints</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># use on df on either side of the join</span>
+<span class="n">df</span><span class="o">.</span><span class="n">hint</span><span class="p">(</span><span class="s2">"merge"</span><span class="p">)</span>
+
+<span class="n">df1</span><span class="o">.</span><span class="n">hint</span><span class="p">(</span><span class="s2">"merge"</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">df2</span><span class="o">.</span><span class="n">hint</span><span class="p">(</span><span class="s2">"merge"</span><span class="p">),</span>
+            <span class="s2">"id"</span>
+        <span class="p">)</span>
+</code></pre>
+</div>
+<ol>
+<li>broadcast</li>
+<li>merge</li>
+<li>shuffle_hash</li>
+<li>shuffle<em>replicate</em>nl</li>
+</ol>
+<h1 id="window-functions">window functions</h1>
+<ol>
+<li>rank
+<ol>
+<li>row<em>number</em></li>
+<li>rank, denserank</li>
+<li>percent<em>rank, ntile</em></li>
+<li>cumedist</li>
+</ol></li>
+<li>aggregation
+<ol>
+<li>sum</li>
+<li>avg</li>
+<li>min</li>
+<li>max</li>
+<li>count</li>
+</ol></li>
+<li>lag, lead</li>
+<li>first, last</li>
+</ol>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.window</span><span class="w"> </span><span class="kn">import</span> <span class="n">Window</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">row_number</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">dense_rank</span><span class="p">,</span> <span class="n">percent_rank</span><span class="p">,</span> <span class="n">ntile</span><span class="p">,</span>
+
+    <span class="nb">sum</span><span class="p">,</span> <span class="n">avg</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span>
+
+    <span class="n">lag</span><span class="p">,</span> <span class="n">lead</span><span class="p">,</span>
+    <span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">,</span>
+
+    <span class="n">cume_dist</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="define-window">define window</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># sample data - customer_id, order_date, amount, city</span>
+
+
+<span class="c1"># running total frame</span>
+<span class="n">win</span> <span class="o">=</span> <span class="p">(</span><span class="n">Window</span>
+    <span class="o">.</span><span class="n">partitionBy</span><span class="p">(</span><span class="s2">"customer_id"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s2">"order_date"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">rowsBetween</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">unboundedPreceding</span><span class="p">,</span> <span class="n">Window</span><span class="o">.</span><span class="n">currentRow</span><span class="p">)</span> <span class="c1"># default window size</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<ul>
+<li>rowsBetween - physical offset (by row)</li>
+<li>rangeBetween - value offset (needs numeric/date orderBy). Use to make frames based on  values (eg - rows of last 7 days, irrespective of how many there are)</li>
+</ul>
+<p>Frame bounds:</p>
+<ul>
+<li>unboundedPreceding</li>
+<li>unboundedFollowing</li>
+<li>currentRow</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># sliding window - last 3 rows including current</span>
+<span class="n">w_slide</span> <span class="o">=</span> <span class="p">(</span><span class="n">Window</span>
+    <span class="o">.</span><span class="n">partitionBy</span><span class="p">(</span><span class="s2">"customer_id"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s2">"order_date"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">rowsBetween</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">Window</span><span class="o">.</span><span class="n">currentRow</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># range frame - rows within 7 days of current row</span>
+<span class="c1"># irrespective of how many rows the window will have</span>
+<span class="n">w_range</span> <span class="o">=</span> <span class="p">(</span><span class="n">Window</span>
+    <span class="o">.</span><span class="n">partitionBy</span><span class="p">(</span><span class="s2">"customer_id"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s2">"order_date_long"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">rangeBetween</span><span class="p">(</span><span class="o">-</span><span class="mi">7</span> <span class="o">*</span> <span class="mi">86400</span><span class="p">,</span> <span class="n">Window</span><span class="o">.</span><span class="n">currentRow</span> <span class="c1"># epoch seconds</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="ranking">Ranking</h2>
+<p>python</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"row_number"</span><span class="p">,</span>    <span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>   <span class="c1"># no ties, always unique</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"rank"</span><span class="p">,</span>       <span class="n">rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>         <span class="c1"># ties get same rank, next rank skips</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"dense_rank"</span><span class="p">,</span> <span class="n">dense_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>   <span class="c1"># ties get same rank, no skip</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"ntile"</span><span class="p">,</span>    <span class="n">ntile</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>       <span class="c1"># quartile bucket 1..4</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"percent_rank"</span><span class="p">,</span>   <span class="n">percent_rank</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="c1"># 0.0 to 1.0</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"cume_dist"</span><span class="p">,</span>  <span class="n">cume_dist</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>    <span class="c1"># fraction of rows &lt;= current</span>
+</code></pre>
+</div>
+<h2 id="lag-lead">Lag / lead</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="n">lag</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"lag_2"</span><span class="p">,</span><span class="n">lag</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="c1"># 2 rows back, default 0</span>
+
+<span class="n">lead</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"lead_2"</span><span class="p">,</span><span class="n">lead</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span>  <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="c1"># 2 rows ahead, default 0</span>
+
+<span class="c1"># example - diff between current and previous rows</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"diff"</span><span class="p">,</span>         <span class="n">col</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span> <span class="o">-</span> <span class="n">lag</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="c1"># change</span>
+</code></pre>
+</div>
+<h2 id="aggregations">Aggregations</h2>
+<p>python</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># running - unboundedPreceding &amp; currentRow</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"sum"</span><span class="p">,</span>  <span class="nb">sum</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"avg"</span><span class="p">,</span>    <span class="n">avg</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span>  <span class="n">count</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+</code></pre>
+</div>
+<hr/>
+<h2 id="first-last">First / last</h2>
+<p>python</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># first/last need ignorNulls and explicit frame for reliable results</span>
+<span class="n">win_full</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">Window</span>
+    <span class="o">.</span><span class="n">partitionBy</span><span class="p">(</span><span class="s2">"customer_id"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s2">"order_date"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">rowsBetween</span><span class="p">(</span><span class="n">Window</span><span class="o">.</span><span class="n">unboundedPreceding</span><span class="p">,</span> <span class="n">Window</span><span class="o">.</span><span class="n">unboundedFollowing</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"first"</span><span class="p">,</span> <span class="n">first</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span> <span class="n">ignoreNulls</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win_full</span><span class="p">))</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"last"</span><span class="p">,</span>  <span class="n">last</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span>  <span class="n">ignoreNulls</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win_full</span><span class="p">))</span>
+</code></pre>
+</div>
+<h2 id="common-patterns">Common patterns</h2>
+<p>latest record per customer (dedup)</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">col</span>
+
+<span class="n">deduped</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"rn"</span><span class="p">,</span> <span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">"rn = 1"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">"rn"</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<p>top N per group</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># top N per group</span>
+<span class="n">top2</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"rn"</span><span class="p">,</span> <span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"rn"</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">"rn"</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<p>Percent of total per partition</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># percent of total per partition</span>
+<span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"pct"</span><span class="p">,</span> <span class="n">col</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">win_full</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="other-stuff">Other stuff</h2>
+<ul>
+<li>No <code>partitionBy</code> -&gt; all data in one partition -&gt; OOM on large tables.</li>
+<li>Default frame with <code>orderBy</code> = <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code> — includes ties.</li>
+<li>Default frame without <code>orderBy</code> = whole partition.</li>
+<li><code>last</code> without explicit <code>unboundedFollowing</code> frame returns current row, not partition last.</li>
+<li><code>rank</code> / <code>dense_rank</code> / <code>row_number</code> ignore frame — always rank within full partition order.</li>
+<li>Window functions not allowed in WHERE/HAVING — wrap in subquery or CTE.</li>
+<li>Multiple windows on same partition+order -&gt; Spark reuses one shuffle. Define them consistently.</li>
+<li><code>percent_rank</code> of first row = 0.0 always; <code>cume_dist</code> of last row = 1.0 always.</li>
+</ul>
+<h1 id="date-and-time-handling">Date and time handling</h1>
+<p>All fns are part of pyspark.sql.functions()</p>
+<h2 id="current-time">Current time</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="n">current_date</span><span class="p">()</span>
+<span class="n">current_timestamp</span><span class="p">()</span>
+</code></pre>
+</div>
+<h2 id="convert">Convert</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># str to object</span>
+<span class="n">to_date</span><span class="p">(</span><span class="s2">"col_str"</span><span class="p">,</span> <span class="s2">"dd-MM-yyyy"</span><span class="p">)</span>                    <span class="c1"># "18-08-2026" -&gt; 2026-08-18</span>
+<span class="n">to_timestamp</span><span class="p">(</span><span class="s2">"col_str"</span><span class="p">,</span> <span class="s2">"yyyy-MM-dd HH:mm:ss"</span><span class="p">)</span>       <span class="c1"># "2026-08-18 14:30:00" -&gt; timestamp</span>
+
+<span class="c1"># object to str</span>
+<span class="n">date_format</span><span class="p">(</span><span class="s2">"col_date"</span><span class="p">,</span> <span class="s2">"yyyy-MM"</span><span class="p">)</span>                      <span class="c1"># 2026-08-18 -&gt; "2026-08"</span>
+</code></pre>
+</div>
+<p>Format specifier strings are usual python placeholders:</p>
+<pre><code>yyyy   → year
+MM     → month
+dd     → day
+HH     → hour (24h)
+mm     → minute
+ss     → second
+SSS    → milliseconds
+a      → AM/PM
+E      → day name
+MMM    → month name
+</code></pre>
+<h2 id="arithmetic">Arithmetic</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># add/sub</span>
+<span class="n">date_add</span><span class="p">(</span><span class="s2">"col"</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>             <span class="c1"># add days (can be -ve)</span>
+<span class="n">add_months</span><span class="p">(</span><span class="s2">"col"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>           <span class="c1"># add months (can be -ve)</span>
+
+<span class="c1"># diff</span>
+<span class="n">datediff</span><span class="p">(</span><span class="s2">"col_end_date"</span><span class="p">,</span> <span class="s2">"col_start_date"</span><span class="p">)</span>  <span class="c1"># diff in days</span>
+<span class="n">months_between</span><span class="p">(</span><span class="s2">"col_end"</span><span class="p">,</span> <span class="s2">"col_start"</span><span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="extract">Extract</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">lit</span>
+
+<span class="n">extract</span><span class="p">(</span>
+    <span class="n">field</span><span class="o">=</span><span class="n">lit</span><span class="p">(</span><span class="s1">'YEAR'</span><span class="p">),</span> 
+    <span class="n">source</span><span class="o">=</span><span class="n">date_col</span>
+<span class="p">)</span> 
+<span class="c1"># fields - "YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND"</span>
+
+<span class="n">quarter</span><span class="p">()</span>
+<span class="n">dayofmonth</span><span class="p">()</span>
+<span class="n">dayofweek</span><span class="p">()</span>
+</code></pre>
+</div>
+<h2 id="boundaries-truncation">Boundaries / truncation</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="n">last_day</span><span class="p">(</span><span class="s2">"date"</span><span class="p">)</span>              <span class="c1"># date of last day of month - 2026-08-18 -&gt; 2026-08-31</span>
+
+<span class="c1"># truncate timestamp</span>
+<span class="n">date_trunc</span><span class="p">(</span><span class="s2">"month"</span><span class="p">,</span> <span class="s2">"ts"</span><span class="p">)</span> <span class="c1"># 2026-08-18 14:30:45 -&gt; 2026-08-01 00:00:00</span>
+<span class="c1"># takes - "year", "quarter", "month", "day", "week", "hour", "minute", "second", "microsecond", "millisecond"</span>
+
+<span class="c1"># truncate date</span>
+<span class="n">trunc</span><span class="p">(</span><span class="s2">"date"</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">)</span> <span class="c1">#2026-08-18 -&gt; 2026-08-01</span>
+<span class="c1"># takes - "year", "quarter", "month", "week"</span>
+
+<span class="n">time_trunc</span> <span class="p">(</span><span class="n">unit</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span><span class="n">col</span><span class="p">)</span>
+<span class="c1"># takes - "hour", "minute", "second", "millisecond", "microsecond"</span>
+</code></pre>
+</div>
+<h1 id="i-o">I/O</h1>
+<h2 id="delta-lake">Delta lake</h2>
+<h3 id="read">read</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># managed unity catalog table</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"catalog.schema.orders"</span><span class="p">)</span>
+
+<span class="c1"># external tabale</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"delta"</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"/mnt/delta/orders"</span><span class="p">)</span>
+
+<span class="c1"># specific version</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"versionAsOf"</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"catalog.schema.orders"</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"timestampAsOf"</span><span class="p">,</span> <span class="s2">"2024-01-01"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"catalog.schema.orders"</span><span class="p">)</span>
+</code></pre>
+</div>
+<h3 id="write">write</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># append</span>
+<span class="p">(</span>
+<span class="n">df</span>
+    <span class="o">.</span><span class="n">write</span>
+    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"delta"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">"append"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"mergeSchema"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span> <span class="c1"># schema evolution</span>
+    <span class="o">.</span><span class="n">saveAsTable</span><span class="p">(</span><span class="s2">"catalog.schema.orders"</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<p>options:</p>
+<ul>
+<li>write mode
+<ul>
+<li>.mode("overwrite")</li>
+<li>overwrite specific partitions only
+<ul>
+<li><code>"replaceWhere", "dt &gt;= '2024-01-01' AND dt &lt; '2024-02-01'"</code></li>
+</ul></li>
+</ul></li>
+<li>schema management
+<ul>
+<li><code>"mergeSchema", "true"</code></li>
+<li><code>"overwriteSchema", "true"</code></li>
+</ul></li>
+</ul>
+<h3 id="create-table">create table</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># DDL</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s2">"""</span>
+<span class="s2">  CREATE TABLE IF NOT EXISTS catalog.schema.orders (</span>
+<span class="s2">    order_id  BIGINT,</span>
+<span class="s2">    customer  STRING,</span>
+<span class="s2">    amt       DECIMAL(10,2),</span>
+<span class="s2">    dt        DATE</span>
+<span class="s2">  )</span>
+<span class="s2">  USING DELTA</span>
+<span class="s2">  CLUSTER BY (customer_id)</span>
+<span class="s2">  TBLPROPERTIES (</span>
+<span class="s2">    'delta.enableDeletionVectors' = 'true',</span>
+<span class="s2">    'delta.enableChangeDataFeed'  = 'true'</span>
+<span class="s2">  )</span>
+<span class="s2">"""</span><span class="p">)</span>
+</code></pre>
+</div>
+<h3 id="maintenance">maintenance</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="c1">-- compaction</span>
+<span class="n">OPTIMIZE</span><span class="w"> </span><span class="k">catalog</span><span class="p">.</span><span class="k">schema</span><span class="p">.</span><span class="n">orders</span>
+
+<span class="n">OPTIMIZE</span><span class="w"> </span><span class="k">catalog</span><span class="p">.</span><span class="k">schema</span><span class="p">.</span><span class="n">orders</span><span class="w"> </span><span class="n">ZORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">customer_id</span><span class="p">)</span>
+
+<span class="c1">-- 7 days history cleanup</span>
+<span class="k">VACUUM</span><span class="w">  </span><span class="k">catalog</span><span class="p">.</span><span class="k">schema</span><span class="p">.</span><span class="n">orders</span><span class="w"> </span><span class="n">RETAIN</span><span class="w"> </span><span class="mi">168</span><span class="w"> </span><span class="n">HOURS</span>
+
+<span class="c1">-- CBO stats</span>
+<span class="k">ANALYZE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">catalog</span><span class="p">.</span><span class="k">schema</span><span class="p">.</span><span class="n">orders</span><span class="w"> </span><span class="n">COMPUTE</span><span class="w"> </span><span class="k">STATISTICS</span><span class="w"> </span><span class="k">FOR</span><span class="w"> </span><span class="k">ALL</span><span class="w"> </span><span class="n">COLUMNS</span>
+</code></pre>
+</div>
+<p>Inspection</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">DESCRIBE</span><span class="w"> </span><span class="n">HISTORY</span><span class="w"> </span><span class="k">catalog</span><span class="p">.</span><span class="k">schema</span><span class="p">.</span><span class="n">orders</span>
+<span class="k">DESCRIBE</span><span class="w"> </span><span class="n">DETAIL</span><span class="w">  </span><span class="k">catalog</span><span class="p">.</span><span class="k">schema</span><span class="p">.</span><span class="n">orders</span>
+</code></pre>
+</div>
+<h2 id="kafka">kafka</h2>
+<p>Options to control batch frequency, read sizes and positions</p>
+<ul>
+<li>Batch frequency - <code>trigger(...)</code>
+<ul>
+<li><code>processingTime="30 seconds"</code></li>
+<li><code>availableNow=True</code></li>
+<li><code>continuous="1 second"</code> - not exactly micro batch. This is v low latency mode</li>
+<li>default - unspecified. It'll process as quickly as it can</li>
+</ul></li>
+<li>Amount admitted per batch
+<ul>
+<li>Limit on number of messages
+<ul>
+<li><code>maxOffsetsPerTrigger</code> - offsets of the topic per trigger</li>
+<li><code>minOffsetsPerTrigger</code>  - accumulate at least these many offsets before processing</li>
+</ul></li>
+<li>Limit on total size of data processed</li>
+<li><code>maxBytesPerTrigger</code> - use for messages with highly variable sizes
+<ul>
+<li><code>"100MB"</code></li>
+</ul></li>
+</ul></li>
+<li>Starting positions
+<ul>
+<li><code>startingOffsets</code> - only applies when query starts without existing checkpoint
+<ul>
+<li><code>"earliest"</code>, <code>"latest"</code>, <code>'{"events":{"0":100,"1":250}}'</code></li>
+</ul></li>
+</ul></li>
+</ul>
+<p>If spark processing capacity is less than kafka arrivals, there will be backlog</p>
+<h3 id="read-2">read</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="n">raw</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">readStream</span>
+       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"kafka"</span><span class="p">)</span>
+       <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"kafka.bootstrap.servers"</span><span class="p">,</span> <span class="s2">"broker1:9092,broker2:9092"</span><span class="p">)</span>
+       <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"subscribe"</span><span class="p">,</span> <span class="s2">"orders"</span><span class="p">)</span>
+       <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"startingOffsets"</span><span class="p">,</span> <span class="s2">"latest"</span><span class="p">)</span>        <span class="c1"># latest / earliest / json offset</span>
+       <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"maxOffsetsPerTrigger"</span><span class="p">,</span> <span class="mi">100_000</span><span class="p">)</span>    <span class="c1"># pace ingestion</span>
+       <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"failOnDataLoss"</span><span class="p">,</span> <span class="s2">"false"</span><span class="p">)</span>          <span class="c1"># topic deleted / offsets expired</span>
+       <span class="o">.</span><span class="n">load</span><span class="p">())</span>
+</code></pre>
+</div>
+<p>batch read (backfill/one-time)</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span>                               <span class="c1"># read not readStream</span>
+      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"kafka"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"kafka.bootstrap.servers"</span><span class="p">,</span> <span class="s2">"broker1:9092,broker2:9092"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"subscribe"</span><span class="p">,</span> <span class="s2">"orders"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"startingOffsets"</span><span class="p">,</span> <span class="s2">"""{"orders":{"0":1000,"1":1000}}"""</span><span class="p">)</span>  <span class="c1"># exact offsets</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"endingOffsets"</span><span class="p">,</span>   <span class="s2">"""{"orders":{"0":2000,"1":2000}}"""</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">load</span><span class="p">())</span>
+</code></pre>
+</div>
+<p>columns you get:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td>binary</td>
+<td>cast to STRING if text key</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>binary</td>
+<td>your payload — always cast/parse</td>
+</tr>
+<tr>
+<td><code>topic</code></td>
+<td>string</td>
+<td>useful when subscribing to multiple</td>
+</tr>
+<tr>
+<td><code>partition</code></td>
+<td>int</td>
+<td></td>
+</tr>
+<tr>
+<td><code>offset</code></td>
+<td>long</td>
+<td></td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>timestamp</td>
+<td>producer or broker timestamp</td>
+</tr>
+<tr>
+<td><code>timestampType</code></td>
+<td>int</td>
+<td>0=CreateTime, 1=LogAppendTime</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parse-value">parse value</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">col</span><span class="p">,</span> <span class="n">from_json</span><span class="p">,</span> <span class="n">from_avro</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">StructType</span><span class="p">,</span> <span class="n">StructField</span><span class="p">,</span> <span class="n">StringType</span><span class="p">,</span> <span class="n">IntegerType</span><span class="p">,</span> <span class="n">TimestampType</span>
+
+<span class="n">schema</span> <span class="o">=</span> <span class="n">StructType</span><span class="p">([</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"order_id"</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"customer"</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"amt"</span><span class="p">,</span>      <span class="n">IntegerType</span><span class="p">()),</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"ts"</span><span class="p">,</span>       <span class="n">TimestampType</span><span class="p">())</span>
+<span class="p">])</span>
+
+<span class="c1"># JSON value</span>
+<span class="n">parsed</span> <span class="o">=</span> <span class="p">(</span><span class="n">raw</span>
+          <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+              <span class="n">from_json</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">"string"</span><span class="p">),</span> <span class="n">schema</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"d"</span><span class="p">),</span>
+              <span class="n">col</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"kafka_ts"</span><span class="p">)</span>
+          <span class="p">)</span>
+          <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"d.*"</span><span class="p">,</span> <span class="s2">"kafka_ts"</span><span class="p">))</span>
+
+<span class="c1"># Avro value (with schema registry)</span>
+<span class="n">parsed</span> <span class="o">=</span> <span class="p">(</span><span class="n">raw</span>
+          <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">from_avro</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"value"</span><span class="p">),</span> <span class="s2">"&lt;avro_schema_json_string&gt;"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"d"</span><span class="p">))</span>
+          <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"d.*"</span><span class="p">))</span>
+</code></pre>
+</div>
+<h3 id="write-2">write</h3>
+<p>streaming write</p>
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="n">parsed</span>
+ <span class="o">.</span><span class="n">selectExpr</span><span class="p">(</span>
+     <span class="s2">"CAST(order_id AS STRING) AS key"</span><span class="p">,</span>   <span class="c1"># key must be STRING or BINARY</span>
+     <span class="s2">"to_json(struct(*)) AS value"</span>         <span class="c1"># value must be STRING or BINARY</span>
+ <span class="p">)</span>
+ <span class="o">.</span><span class="n">writeStream</span>
+ <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"kafka"</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"kafka.bootstrap.servers"</span><span class="p">,</span> <span class="s2">"broker1:9092,broker2:9092"</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"topic"</span><span class="p">,</span> <span class="s2">"orders_enriched"</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"checkpointLocation"</span><span class="p">,</span> <span class="s2">"/mnt/checkpoints/orders_enriched"</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">outputMode</span><span class="p">(</span><span class="s2">"append"</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="n">processingTime</span><span class="o">=</span><span class="s2">"30 seconds"</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">start</span><span class="p">())</span>
+</code></pre>
+</div>
+<p>batch write</p>
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">selectExpr</span><span class="p">(</span><span class="s2">"CAST(id AS STRING) AS key"</span><span class="p">,</span> <span class="s2">"to_json(struct(*)) AS value"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">write</span>
+   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"kafka"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"kafka.bootstrap.servers"</span><span class="p">,</span> <span class="s2">"broker1:9092,broker2:9092"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"topic"</span><span class="p">,</span> <span class="s2">"orders_out"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">save</span><span class="p">())</span>
+</code></pre>
+</div>
+<h2 id="csv">csv</h2>
+<p>Read all files in subdirs too? use <code>option("recursiveFileLookup", "true")</code> (disables partition inference)</p>
+<h3 id="read-3">read</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"csv"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"header"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"inferSchema"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span>       <span class="c1"># avoid in prod — triggers extra scan</span>
+      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"/mnt/data/orders.csv"</span><span class="p">))</span>
+
+<span class="c1"># explicit schema (prod way)</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="s2">"order_id INT, customer STRING, amt DECIMAL(10,2), dt DATE"</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"csv"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"header"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"dateFormat"</span><span class="p">,</span> <span class="s2">"yyyy-MM-dd"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"timestampFormat"</span><span class="p">,</span> <span class="s2">"yyyy-MM-dd HH:mm:ss"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"nullValue"</span><span class="p">,</span> <span class="s2">"NULL"</span><span class="p">)</span>         <span class="c1"># treat this string as null</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"emptyValue"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="s2">"PERMISSIVE"</span><span class="p">)</span>        <span class="c1"># PERMISSIVE / DROPMALFORMED / FAILFAST</span>
+      <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"columnNameOfCorruptRecord"</span><span class="p">,</span> <span class="s2">"_corrupt_record"</span><span class="p">)</span>
+      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"/mnt/data/orders.csv"</span><span class="p">))</span>
+
+<span class="c1"># read folder — all CSVs in directory</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"header"</span><span class="p">,</span><span class="s2">"true"</span><span class="p">)</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s2">"/mnt/data/orders/"</span><span class="p">)</span>
+
+<span class="c1"># read multiple explicit paths</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"header"</span><span class="p">,</span><span class="s2">"true"</span><span class="p">)</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span>
+    <span class="s2">"/mnt/data/orders_jan.csv"</span><span class="p">,</span>
+    <span class="s2">"/mnt/data/orders_feb.csv"</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h3 id="options">options</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>header</code>|false</td>
+<td>use first row as column names</td>
+</tr>
+<tr>
+<td><code>sep</code> / <code>delimiter</code>|<code>,</code>|any single char; <code>\t</code> for TSV</td>
+</tr>
+<tr>
+<td><code>quote</code>|<code>"</code>|quoting character</td>
+</tr>
+<tr>
+<td><code>escape</code>|<code>\</code>|escape character inside quotes</td>
+</tr>
+<tr>
+<td><code>multiLine</code>|false</td>
+<td>fields with newlines inside quotes</td>
+</tr>
+<tr>
+<td><code>encoding</code>|UTF-8</td>
+<td><code>ISO-8859-1</code> for legacy files</td>
+</tr>
+<tr>
+<td><code>ignoreLeadingWhiteSpace</code>|false</td>
+<td></td>
+</tr>
+<tr>
+<td><code>ignoreTrailingWhiteSpace</code>|false</td>
+<td></td>
+</tr>
+<tr>
+<td><code>nanValue</code>|<code>NaN</code>|string to treat as NaN</td>
+</tr>
+<tr>
+<td><code>positiveInf</code> / <code>negativeInf</code>|<code>Inf</code> / <code>-Inf</code>|</td>
+</tr>
+<tr>
+<td><code>comment</code>|disabled</td>
+<td>skip lines starting with this char</td>
+</tr>
+</tbody>
+</table>
+<h3 id="write-3">write</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># basic</span>
+<span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">write</span>
+   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"csv"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">"overwrite"</span><span class="p">)</span>               <span class="c1"># overwrite / append / error / ignore</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"header"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"/mnt/data/output/orders"</span><span class="p">))</span>
+
+<span class="c1"># options</span>
+<span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">write</span>
+   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"csv"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">"overwrite"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"header"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"sep"</span><span class="p">,</span> <span class="s2">","</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"quote"</span><span class="p">,</span> <span class="s1">'"'</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"escape"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"nullValue"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"dateFormat"</span><span class="p">,</span> <span class="s2">"yyyy-MM-dd"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"timestampFormat"</span><span class="p">,</span> <span class="s2">"yyyy-MM-dd HH:mm:ss"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"compression"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>   <span class="c1"># none / gzip / bz2 / deflate / snappy</span>
+   <span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"/mnt/data/output/orders"</span><span class="p">))</span>
+
+<span class="c1"># control number of output files</span>
+<span class="n">df</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>       <span class="c1"># single file — small data only</span>
+<span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>   <span class="c1"># 10 files</span>
+</code></pre>
+</div>
+<h2 id="json">json</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"alice"</span><span class="p">,</span><span class="w"> </span><span class="nt">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pune"</span><span class="p">,</span><span class="w"> </span><span class="nt">"pin"</span><span class="p">:</span><span class="w"> </span><span class="s2">"411001"</span><span class="p">},</span><span class="w"> </span><span class="nt">"orders"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"oid"</span><span class="p">:</span><span class="w"> </span><span class="mi">101</span><span class="p">,</span><span class="w"> </span><span class="nt">"amt"</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"oid"</span><span class="p">:</span><span class="w"> </span><span class="mi">102</span><span class="p">,</span><span class="w"> </span><span class="nt">"amt"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">}]}</span>
+</code></pre>
+</div>
+<h3 id="read-4">read</h3>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.types</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">col</span><span class="p">,</span> <span class="n">explode</span><span class="p">,</span> <span class="n">explode_outer</span>
+
+<span class="n">schema</span> <span class="o">=</span> <span class="n">StructType</span><span class="p">([</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span>      <span class="n">IntegerType</span><span class="p">()),</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span>    <span class="n">StringType</span><span class="p">()),</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"address"</span><span class="p">,</span> <span class="n">StructType</span><span class="p">([</span>
+        <span class="n">StructField</span><span class="p">(</span><span class="s2">"city"</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+        <span class="n">StructField</span><span class="p">(</span><span class="s2">"pin"</span><span class="p">,</span>  <span class="n">StringType</span><span class="p">())</span>
+    <span class="p">])),</span>
+    <span class="n">StructField</span><span class="p">(</span><span class="s2">"orders"</span><span class="p">,</span>  <span class="n">ArrayType</span><span class="p">(</span><span class="n">StructType</span><span class="p">([</span>
+        <span class="n">StructField</span><span class="p">(</span><span class="s2">"oid"</span><span class="p">,</span> <span class="n">IntegerType</span><span class="p">()),</span>
+        <span class="n">StructField</span><span class="p">(</span><span class="s2">"amt"</span><span class="p">,</span> <span class="n">IntegerType</span><span class="p">())</span>
+    <span class="p">])))</span>
+<span class="p">])</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s2">"/mnt/data/users.json"</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre>
+</div>
+<h3 id="flatten-and-explode-in-1-step">flatten and explode in 1 step</h3>
+<p>and also flatten exploded json</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">final</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="s2">"id"</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">,</span>
+        <span class="n">col</span><span class="p">(</span><span class="s2">"address.city"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"city"</span><span class="p">),</span>
+        <span class="n">col</span><span class="p">(</span><span class="s2">"address.pin"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"pin"</span><span class="p">),</span>
+        <span class="n">explode</span><span class="p">(</span><span class="s2">"orders"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"order"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="s2">"id"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"city"</span><span class="p">,</span> <span class="s2">"pin"</span><span class="p">,</span>
+        <span class="n">col</span><span class="p">(</span><span class="s2">"order.oid"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"order_id"</span><span class="p">),</span>
+        <span class="n">col</span><span class="p">(</span><span class="s2">"order.amt"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span>
+    <span class="p">))</span>
+</code></pre>
+</div>
+<p><strong>Gotchas</strong></p>
+<ul>
+<li><strong><code>explode</code> on a null/empty array drops the row silently — use <code>explode_outer</code> to keep it.</strong></li>
+<li>After explode, the array column is gone — select what you need before exploding or re-join.</li>
+<li>DDL schema shorthand for the same schema:</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="n">schema</span> <span class="o">=</span> <span class="s2">"id INT, name STRING, address STRUCT&lt;city:STRING, pin:STRING&gt;, orders ARRAY&lt;STRUCT&lt;oid:INT, amt:INT&gt;&gt;"</span>
+</code></pre>
+</div>
+<h2 id="sqlserver">sqlserver</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="n">jdbc_url</span> <span class="o">=</span> <span class="s2">"jdbc:sqlserver://server.database.windows.net:1433;databaseName=mydb"</span>
+
+<span class="n">connection_props</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"user"</span><span class="p">:</span>     <span class="n">dbutils</span><span class="o">.</span><span class="n">secrets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scope"</span><span class="p">,</span> <span class="s2">"sql-user"</span><span class="p">),</span>
+    <span class="s2">"password"</span><span class="p">:</span> <span class="n">dbutils</span><span class="o">.</span><span class="n">secrets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scope"</span><span class="p">,</span> <span class="s2">"sql-password"</span><span class="p">),</span>
+    <span class="s2">"driver"</span><span class="p">:</span>   <span class="s2">"com.microsoft.sqlserver.jdbc.SQLServerDriver"</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+<h2 id="azure-sql-with-aad-token-no-password">azure sql with aad token (no password)</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">struct</span><span class="o">,</span><span class="w"> </span><span class="nn">pyodbc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.identity</span><span class="w"> </span><span class="kn">import</span> <span class="n">ManagedIdentityCredential</span>
+
+<span class="n">cred</span>  <span class="o">=</span> <span class="n">ManagedIdentityCredential</span><span class="p">()</span>
+<span class="n">token</span> <span class="o">=</span> <span class="n">cred</span><span class="o">.</span><span class="n">get_token</span><span class="p">(</span><span class="s2">"https://database.windows.net/.default"</span><span class="p">)</span><span class="o">.</span><span class="n">token</span>
+
+<span class="c1"># pack token for pyodbc</span>
+<span class="n">token_bytes</span>  <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-16-le"</span><span class="p">)</span>
+<span class="n">token_struct</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;I</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">token_bytes</span><span class="p">)</span><span class="si">}</span><span class="s2">s"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">token_bytes</span><span class="p">),</span> <span class="n">token_bytes</span><span class="p">)</span>
+
+<span class="n">conn</span> <span class="o">=</span> <span class="n">pyodbc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+    <span class="s2">"DRIVER={ODBC Driver 17 for SQL Server};"</span>
+    <span class="s2">"SERVER=server.database.windows.net;"</span>
+    <span class="s2">"DATABASE=mydb"</span><span class="p">,</span>
+    <span class="n">attrs_before</span><span class="o">=</span><span class="p">{</span><span class="mi">1256</span><span class="p">:</span> <span class="n">token_struct</span><span class="p">}</span>   <span class="c1"># SQL_COPT_SS_ACCESS_TOKEN = 1256</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="read-full-table">read - full table</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+      <span class="o">.</span><span class="n">jdbc</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">jdbc_url</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s2">"dbo.orders"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">connection_props</span><span class="p">))</span>
+</code></pre>
+</div>
+<h2 id="read-query">read - query</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+      <span class="o">.</span><span class="n">jdbc</span><span class="p">(</span>
+          <span class="n">url</span>        <span class="o">=</span> <span class="n">jdbc_url</span><span class="p">,</span>
+          <span class="n">table</span>      <span class="o">=</span> <span class="s2">"(SELECT * FROM dbo.orders WHERE dt &gt;= '2024-01-01') AS t"</span><span class="p">,</span>
+          <span class="n">properties</span> <span class="o">=</span> <span class="n">connection_props</span>
+      <span class="p">))</span>
+</code></pre>
+</div>
+<h2 id="read-parallel">read - parallel</h2>
+<p>manual</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">predicates</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"order_id BETWEEN 1       AND 250000"</span><span class="p">,</span>
+    <span class="s2">"order_id BETWEEN 250001  AND 500000"</span><span class="p">,</span>
+    <span class="s2">"order_id BETWEEN 500001  AND 750000"</span><span class="p">,</span>
+    <span class="s2">"order_id BETWEEN 750001  AND 1000000"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+      <span class="o">.</span><span class="n">jdbc</span><span class="p">(</span>
+      <span class="n">url</span><span class="o">=</span><span class="n">jdbc_url</span><span class="p">,</span>
+      <span class="n">table</span><span class="o">=</span><span class="s2">"dbo.orders"</span><span class="p">,</span>
+      <span class="n">predicates</span><span class="o">=</span><span class="n">predicates</span><span class="p">,</span>
+      <span class="n">properties</span><span class="o">=</span><span class="n">connection_props</span>
+      <span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<p>automatic - only on partitionable cols like int, float, date, timestamp</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+      <span class="o">.</span><span class="n">jdbc</span><span class="p">(</span>
+          <span class="n">url</span>               <span class="o">=</span> <span class="n">jdbc_url</span><span class="p">,</span>
+          <span class="n">table</span>             <span class="o">=</span> <span class="s2">"(SELECT * FROM dbo.orders) AS t"</span><span class="p">,</span>
+          <span class="n">column</span>            <span class="o">=</span> <span class="s2">"order_id"</span><span class="p">,</span>        <span class="c1"># numeric / date column</span>
+          <span class="n">lowerBound</span>        <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="n">upperBound</span>        <span class="o">=</span> <span class="mi">10_000_000</span><span class="p">,</span>
+          <span class="n">numPartitions</span>     <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+          <span class="n">properties</span>        <span class="o">=</span> <span class="n">connection_props</span>
+      <span class="p">))</span>
+</code></pre>
+</div>
+<h2 id="write-4">write</h2>
+<p>append</p>
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">write</span>
+   <span class="o">.</span><span class="n">jdbc</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">jdbc_url</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s2">"dbo.orders_out"</span><span class="p">,</span>
+         <span class="n">mode</span><span class="o">=</span><span class="s2">"append"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">connection_props</span><span class="p">))</span>
+</code></pre>
+</div>
+<p>overwrite</p>
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">write</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"truncate"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span>        <span class="c1"># truncate instead of DROP + recreate</span>
+   <span class="o">.</span><span class="n">jdbc</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">jdbc_url</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s2">"dbo.orders_out"</span><span class="p">,</span>
+         <span class="n">mode</span><span class="o">=</span><span class="s2">"overwrite"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">connection_props</span><span class="p">))</span>
+</code></pre>
+</div>
+<p>write - batch size + isolation</p>
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">write</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"batchsize"</span><span class="p">,</span>        <span class="mi">10_000</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"isolationLevel"</span><span class="p">,</span>   <span class="s2">"READ_COMMITTED"</span><span class="p">)</span>
+   <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">"numPartitions"</span><span class="p">,</span>    <span class="mi">8</span><span class="p">)</span>              <span class="c1"># parallel writers</span>
+   <span class="o">.</span><span class="n">jdbc</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">jdbc_url</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="s2">"dbo.orders_out"</span><span class="p">,</span>
+         <span class="n">mode</span><span class="o">=</span><span class="s2">"append"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">connection_props</span><span class="p">))</span>
+</code></pre>
+</div>
+<p><strong>Gotchas</strong></p>
+<ul>
+<li>JDBC reads are single-partition by default — always use <code>numPartitions</code> for large tables.</li>
+<li><code>lowerBound</code>/<code>upperBound</code> are splitting hints not filters — rows outside range still read.</li>
+<li><code>overwrite</code> without <code>truncate=true</code> drops and recreates table — kills indexes.</li>
+<li><code>batchsize</code> default is 1000 — too low for large writes, set 10k–50k.</li>
+<li>Driver jar must be on cluster — in Databricks add <code>com.microsoft.sqlserver:mssql-jdbc:12.4.2.jre11</code> as Maven library.</li>
+<li>Stored procs and DDL must go through a direct JDBC/pyodbc connection on the driver, not Spark.</li>
+<li>Never put credentials in code — always <code>dbutils.secrets.get</code>.</li>
+<li>Parallel writers (<code>numPartitions</code> on write) can cause deadlocks on SQL Server — tune based on target table's lock behaviour.</li>
+</ul>
+<h1 id="scd">scd</h1>
+<h1 id="scd-2">SCD</h1>
+<ul>
+<li>scd 1 - corrections/current-state data 
+<ul>
+<li>overwrite existing</li>
+</ul></li>
+<li>scd 2 - audit history/reporting
+<ul>
+<li>insert new row for change, mark older as expired</li>
+</ul></li>
+<li>scd 3 - only want immediate previous value
+<ul>
+<li>store current and previous value in separate columns</li>
+</ul></li>
+<li>scd 4 - separate operational(current) and historical workloads
+<ul>
+<li>update current table and push update to historical table (append only history)</li>
+<li>eg - track cart - to know what's currently in cart, but also know what was added and removed from the cart</li>
+</ul></li>
+<li>scd 6 - complex reporting requirements
+<ul>
+<li>combination of 1, 2, 3</li>
+</ul></li>
+</ul>
+<h2 id="scd-1">scd 1</h2>
+<p>Overwrite existing data</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.customer_id = s.customer_id"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdateAll</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-2-2">scd 2</h2>
+<ul>
+<li>cols - id, name, city</li>
+<li>added cols - surrogate<em>key, valid</em>from, valid<em>to, is</em>current</li>
+</ul>
+<p><strong>single merge</strong></p>
+<p>Create a staged source containing 2 tows - one to expire existing row, one to insert new version</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="c1"># Create source rows:</span>
+<span class="c1"># 1. A "matched" row to expire the existing version</span>
+<span class="c1"># 2. An "unmatched" row to insert the new version</span>
+<span class="n">staged</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">))</span> <span class="o">&amp;</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.is_current"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"left"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+        <span class="s2">"changed"</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">)</span><span class="o">.</span><span class="n">isNotNull</span><span class="p">()</span> <span class="o">&amp;</span>
+        <span class="p">(</span>
+            <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
+            <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+        <span class="s2">"merge_id"</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"id"</span><span class="p">))</span>
+         <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Duplicate changed rows:</span>
+<span class="c1">#   merge_id = id      -&gt; matches existing row and expires it</span>
+<span class="c1">#   merge_id = NULL    -&gt; doesn't match, so inserts new version</span>
+<span class="n">expire_rows</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">)</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+    <span class="s2">"merge_id"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">insert_rows</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+    <span class="s2">"merge_id"</span><span class="p">,</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">"long"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">staged</span> <span class="o">=</span> <span class="n">expire_rows</span><span class="o">.</span><span class="n">unionByName</span><span class="p">(</span><span class="n">insert_rows</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">staged</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.merge_id AND t.is_current = true"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">,</span>
+            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
+            <span class="s2">"valid_from"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span><span class="p">,</span>
+            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"NULL"</span><span class="p">,</span>
+            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"true"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<p><strong>2 merges</strong></p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="c1"># 1. Find existing records whose attributes changed</span>
+<span class="n">changed</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">))</span> <span class="o">&amp;</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.is_current"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"inner"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># 2. Expire old versions</span>
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">changed</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id AND t.is_current = true"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">,</span>
+            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="c1"># 3. Insert new versions + genuinely new records</span>
+<span class="n">new_rows</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"is_current"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_from"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_to"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">))</span>
+<span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">new_rows</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id AND t.is_current = true"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-3">scd 3</h2>
+<p>cols - id, name, city</p>
+<ul>
+<li>added cols - previous<em>name, previous</em>city</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"previous_name"</span><span class="p">:</span> <span class="s2">"t.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
+            <span class="s2">"previous_city"</span><span class="p">:</span> <span class="s2">"t.city"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"previous_name"</span><span class="p">:</span> <span class="s2">"NULL"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
+            <span class="s2">"previous_city"</span><span class="p">:</span> <span class="s2">"NULL"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-4">scd 4</h2>
+<ul>
+<li>cols - id, name, city</li>
+<li>added cols - valid<em>from, valid</em>to</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">current</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+<span class="n">history</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer_history"</span><span class="p">)</span>
+
+<span class="c1"># Find changed existing records</span>
+<span class="n">changed</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">),</span>
+        <span class="s2">"inner"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="s2">"t.id"</span><span class="p">,</span>
+        <span class="s2">"t.name"</span><span class="p">,</span>
+        <span class="s2">"t.city"</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Copy old versions to history</span>
+<span class="p">(</span>
+    <span class="n">changed</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_from"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_to"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
+    <span class="o">.</span><span class="n">write</span>
+    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"delta"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">"append"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">saveAsTable</span><span class="p">(</span><span class="s2">"dim_customer_history"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># 2. Update current table</span>
+<span class="p">(</span>
+    <span class="n">current</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-5">scd 5</h2>
+<p>--</p>
+<h1 id="workflows">Workflows</h1>
+<h2 id="handle-nulls">Handle nulls</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Coalesce</span>
+<span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"col_processed"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"col_processed"</span><span class="p">),</span> <span class="n">col</span><span class="p">(</span><span class="s2">"other_col"</span><span class="p">)))</span>
+
+<span class="c1"># Fill nulls</span>
+<span class="n">fill_na_values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"col1"</span><span class="p">:</span> <span class="n">val1</span><span class="p">,</span> <span class="s2">"col2"</span><span class="p">:</span> <span class="n">val2</span><span class="p">}</span>
+<span class="n">df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fill_na_values</span><span class="p">)</span> <span class="c1"># set col's values through dict</span>
+
+<span class="c1"># Drop nulls</span>
+<span class="n">df</span><span class="o">.</span><span class="n">na</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"col1"</span><span class="p">,</span> <span class="s2">"col2"</span><span class="p">])</span> <span class="c1"># specifying subset is optional</span>
+
+<span class="c1"># Using case</span>
+<span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">,</span>
+    <span class="n">when</span><span class="p">(</span>
+        <span class="n">col</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">isNull</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="deduplicate">Deduplicate</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># all cols</span>
+<span class="n">fully_unique_rows_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+<span class="c1"># specific cols</span>
+<span class="n">unique_names_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropDuplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"surname"</span><span class="p">])</span>
+</code></pre>
+</div>
+<h1 id="functions">Functions</h1>
+<h2 id="group-concat">group_concat</h2>
+<p>In PySpark, the equivalent of SQL <code>GROUP_CONCAT</code> is typically <code>collect_list()</code> + <code>concat_ws()</code>.</p>
+<p><code>concat_ws</code> means concat with separator</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s2">"customerId"</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">concat_ws</span><span class="p">(</span><span class="s2">", "</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s2">"productName"</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"products"</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<blockquote>
+<p>Note: for unique values, use collect<em>set() instead of collect</em>list()</p>
+</blockquote>
+<p>Input:</p>
+<table>
+<thead>
+<tr>
+<th>customerId</th>
+<th>productName</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Laptop</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Mouse</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Keyboard</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Monitor</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Webcam</td>
+</tr>
+</tbody>
+</table>
+<p>Output:</p>
+<table>
+<thead>
+<tr>
+<th>customerId</th>
+<th>products</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Laptop, Mouse, Keyboard</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Monitor, Webcam</td>
+</tr>
+</tbody>
+</table>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            4798 words &middot; 24m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-02.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 02 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>

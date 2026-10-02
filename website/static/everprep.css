@@ -1,0 +1,37 @@
+/* everprep additions on top of theniraj.com's template_minimal (minimal.css) */
+
+@media (min-width: 76rem) {
+    /* desktop: pages list in the right column, sticky like the toc */
+    .article-layout > .more {
+        grid-column: 3;
+        grid-row: 1 / -1;
+        position: sticky;
+        top: 1.5rem;
+        align-self: start;
+        max-height: calc(100vh - 3rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: var(--rule) transparent;
+        margin: 0;
+        padding-top: 0.75rem; /* room for the box title, which sits on the border */
+    }
+
+    .article-layout > .more > .box {
+        margin-top: 0;
+    }
+
+    .more .list li {
+        grid-template-columns: 4em minmax(0, 1fr);
+        margin-bottom: 0.4em;
+    }
+}
+
+/* current page: red instead of the theme's "you are here" marker */
+.list .is-current > a {
+    color: var(--accent);
+}
+
+.list .is-current > a::after {
+    content: none;
+}

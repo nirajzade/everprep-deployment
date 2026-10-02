@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>sql - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>sql</h1>
+        <p class="meta">11m read &middot; 2292 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#clause-execution-order">Clause execution order</a></li>
+    <li><a href="#nulls">Nulls</a></li>
+    <li><a href="#key-types">Key types</a></li>
+    <li><a href="#date-handling">Date handling</a></li>
+    <li><a href="#string-operations">String operations</a></li>
+    <li><a href="#gaps-and-islands">Gaps and islands</a></li>
+    <li><a href="#sample-questions-dump">Sample questions dump</a>
+<ul>
+    <li><a href="#sessionization">Sessionization</a>
+<ul>
+    <li><a href="#session-in-30-minute-breaks">Session in 30 minute breaks</a></li>
+    <li><a href="#session-between-a-login-and-logout-event">session between a login and logout event</a></li>
+</ul></li>
+    <li><a href="#longest-consecutive-streak">Longest consecutive streak</a></li>
+    <li><a href="#gaps">Gaps</a>
+<ul>
+    <li><a href="#find-missing-dates">Find missing dates</a></li>
+</ul></li>
+    <li><a href="#islands">Islands</a>
+<ul>
+    <li><a href="#stock-price-above-100">stock price above 100</a></li>
+    <li><a href="#customer-with-consecutive-day-purchases">customer with consecutive day purchases</a></li>
+    <li><a href="#employee-consecutive-employment-periods">Employee consecutive employment periods</a></li>
+</ul></li>
+    <li><a href="#merge-overlapping-date-ranges">Merge overlapping date ranges</a></li>
+</ul></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<h1 id="clause-execution-order">Clause execution order</h1>
+<ol>
+<li><code>FROM</code>, <code>JOIN</code>, <code>ON</code> - Take in all source tables. Join them to create a single large table.</li>
+<li><code>WHERE</code> - Filter the large combined table to remove unnecessary rows.</li>
+<li><code>GROUP BY</code></li>
+<li><code>HAVING</code></li>
+<li>Window functions, <code>SELECT</code>, <code>distinct()</code> - Select required columns from the table. Apply window functions if required.</li>
+<li><code>ORDER BY</code></li>
+<li><code>LIMIT</code></li>
+<li>Return the data as result.</li>
+</ol>
+<h1 id="nulls">Nulls</h1>
+<ul>
+<li>joins - will ignore null values</li>
+<li>sort - will put null at beginning or end depending on dbms</li>
+<li>group by - all nulls become a single category</li>
+<li>aggregates - will ignore null values (exception - <code>count(*)</code> will count  null valued rows too)</li>
+</ul>
+<h1 id="key-types">Key types</h1>
+<ul>
+<li>Primary key - 1 column. Only 1 primary key per table.</li>
+<li>Super key 
+<ul>
+<li>any combinations of columns to pinpoint a row</li>
+<li>may contain unnecessary columns</li>
+</ul></li>
+<li>Candidate key - minimal superkey</li>
+<li>Composite key - key of more than 1 columns</li>
+</ul>
+<p><img alt="" src="z_asset_key_types.png"/></p>
+<h1 id="date-handling">Date handling</h1>
+<p>CAST - most portable function (part of SQL spec itself)</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1">-- sqlserver</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">TRY_CONVERT</span><span class="p">(</span><span class="nb">date</span><span class="p">,</span><span class="w"> </span><span class="s1">'26-09-2026'</span><span class="p">,</span><span class="w"> </span><span class="mi">105</span><span class="p">);</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">YEAR</span><span class="p">(</span><span class="n">date_column</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">MONTH</span><span class="p">(</span><span class="n">date_col</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="nb">DATE</span><span class="p">(</span><span class="n">date_col</span><span class="p">)</span>
+
+<span class="c1">-- postgres</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">TO_DATE</span><span class="p">(</span><span class="s1">'26-09-2026'</span><span class="p">,</span><span class="w"> </span><span class="s1">'DD-MM-YYYY'</span><span class="p">);</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">EXTRACT</span><span class="p">(</span><span class="k">YEAR</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">date_column</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">EXTRACT</span><span class="p">(</span><span class="k">MONTH</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">date_col</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">EXTRACT</span><span class="p">(</span><span class="k">DAY</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">date_col</span><span class="p">)</span>
+
+<span class="c1">-- spark</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">to_date</span><span class="p">(</span><span class="s1">'26-09-2026'</span><span class="p">,</span><span class="w"> </span><span class="s1">'dd-MM-yyyy'</span><span class="p">);</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="k">YEAR</span><span class="p">(</span><span class="n">date_column</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>TRY_CONVERT formatters - <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/cast-and-convert-transact-sql?view=sql-server-ver17#date-and-time-styles">Sqlserver - Date and time styles</a></p>
+<h1 id="string-operations">String operations</h1>
+<p>TRIM(str_col)</p>
+<p>Wildcard characters</p>
+<ul>
+<li><code>%</code> - zero or more characters</li>
+<li><code>_</code> - exactly one character</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WHERE</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="k">LIKE</span><span class="w"> </span><span class="s1">'John%'</span>
+</code></pre>
+</div>
+<p>Case sensitivity of LIKE changes with dbms.</p>
+<ul>
+<li>postgres - sensitive (use ILIKE for insensitive matching)</li>
+<li>sqlserver - depends on collation (Latin1<em>General</em>CS<em>AS vs Latin1</em>General<em>CI</em>AS)</li>
+<li>mysql - depends on collation</li>
+<li>spark - sensitive</li>
+</ul>
+<h1 id="gaps-and-islands">Gaps and islands</h1>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Typical technique</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Consecutive values/dates</td>
+<td><code>ROW_NUMBER()</code> + grouping (make sure to dedupe)</td>
+</tr>
+<tr>
+<td>Detect gaps</td>
+<td><code>LAG()</code></td>
+</tr>
+<tr>
+<td>Build groups from boundaries</td>
+<td><code>LAG()</code> + cumulative <code>SUM()</code></td>
+</tr>
+<tr>
+<td>Merge overlapping ranges</td>
+<td>Running <code>MAX()</code> + cumulative <code>SUM()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Merge overlapping ranges     | Running <code>MAX()</code> + cumulative <code>SUM()</code>            |</p>
+<h1 id="sample-questions-dump">Sample questions dump</h1>
+<h2 id="sessionization">Sessionization</h2>
+<h3 id="session-in-30-minute-breaks">Session in 30 minute breaks</h3>
+<blockquote>
+<p>For raw event logs stored in a sql database, count user sessions. A new session starts when the gap between an event and the <strong>immediately preceding event</strong> is greater than 30 minutes.</p>
+</blockquote>
+<p>Columns: user<em>id, event</em>time</p>
+<p>Approach:</p>
+<ol>
+<li>Sort events by <code>user_id, event_time</code>.</li>
+<li>Use <code>LAG()</code> to get the previous event time for each user.</li>
+<li>Start a new session when the gap from the previous event is <strong>&gt; 30 minutes</strong>.</li>
+<li>Cumulatively sum the session-start flags to assign a <code>session_id</code>.</li>
+<li>Count sessions.</li>
+</ol>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">events_with_prev</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">event_time</span><span class="p">,</span>
+<span class="w">        </span><span class="n">LAG</span><span class="p">(</span><span class="n">event_time</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">event_time</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">prev_event_time</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">events</span>
+<span class="p">),</span>
+
+<span class="n">session_starts</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">CASE</span>
+<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">prev_event_time</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">              </span><span class="k">OR</span><span class="w"> </span><span class="n">DATEDIFF</span><span class="p">(</span><span class="k">MINUTE</span><span class="p">,</span><span class="w"> </span><span class="n">prev_event_time</span><span class="p">,</span><span class="w"> </span><span class="n">event_time</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">30</span>
+<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_new_session</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">events_with_prev</span>
+<span class="p">),</span>
+
+<span class="n">sessionized</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">SUM</span><span class="p">(</span><span class="n">is_new_session</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">event_time</span>
+<span class="w">            </span><span class="k">ROWS</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="n">UNBOUNDED</span><span class="w"> </span><span class="n">PRECEDING</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">CURRENT</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">session_id</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">session_starts</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">session_id</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">session_count</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">sessionized</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span><span class="p">;</span>
+</code></pre>
+</div>
+<h3 id="session-between-a-login-and-logout-event">session between a login and logout event</h3>
+<p>simply count logins</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">SELECT</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">session_count</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">events</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'login'</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span><span class="p">;</span>
+</code></pre>
+</div>
+<p>If want to consider logout too, and there are activities between login and logout:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">flagged</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">event_time</span><span class="p">,</span>
+<span class="w">        </span><span class="n">event</span><span class="p">,</span>
+
+<span class="w">        </span><span class="k">CASE</span>
+<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'login'</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_login</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">events</span>
+<span class="p">),</span>
+
+<span class="n">sessionized</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">SUM</span><span class="p">(</span><span class="n">is_login</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">event_time</span>
+<span class="w">            </span><span class="k">ROWS</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="n">UNBOUNDED</span><span class="w"> </span><span class="n">PRECEDING</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">CURRENT</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">session_id</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">flagged</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">session_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'login'</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="n">event_time</span><span class="w"> </span><span class="k">END</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">login_time</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MAX</span><span class="p">(</span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'logout'</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="n">event_time</span><span class="w"> </span><span class="k">END</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">logout_time</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">sessionized</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">session_id</span><span class="p">;</span>
+</code></pre>
+</div>
+<h2 id="longest-consecutive-streak">Longest consecutive streak</h2>
+<p>Approach:</p>
+<ul>
+<li>Start with one row per <code>user_id</code> and <code>activity_date</code>.</li>
+<li>Remove duplicate activity dates per user, so multiple activities on the same day don't artificially increase the streak.</li>
+<li>Use <code>ROW_NUMBER()</code> to number each user's activity dates chronologically.</li>
+<li>Subtract the row number from the activity date.
+<ul>
+<li>Consecutive dates produce the same derived value.</li>
+<li>A gap produces a different derived value.</li>
+</ul></li>
+<li>Group by <code>user_id</code> and the derived value to form each consecutive streak.</li>
+<li>For each streak, calculate its length using <code>COUNT(*)</code>.</li>
+<li>Rank the streaks for each user by length, longest first.</li>
+<li>Select the longest streak for each user.</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">distinct_days</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">DISTINCT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">activity_date</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">user_activity</span>
+<span class="p">),</span>
+
+<span class="n">numbered</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">activity_date</span><span class="p">,</span>
+<span class="w">        </span><span class="n">ROW_NUMBER</span><span class="p">()</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">activity_date</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">rn</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">distinct_days</span>
+<span class="p">),</span>
+
+<span class="n">islands</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">activity_date</span><span class="p">,</span>
+<span class="w">        </span><span class="n">DATEADD</span><span class="p">(</span><span class="k">DAY</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">rn</span><span class="p">,</span><span class="w"> </span><span class="n">activity_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">island_id</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">numbered</span>
+<span class="p">),</span>
+
+<span class="n">streaks</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="k">MIN</span><span class="p">(</span><span class="n">activity_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">streak_start</span><span class="p">,</span>
+<span class="w">        </span><span class="k">MAX</span><span class="p">(</span><span class="n">activity_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">streak_end</span><span class="p">,</span>
+<span class="w">        </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">streak_days</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">islands</span>
+<span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">island_id</span>
+<span class="p">),</span>
+
+<span class="n">ranked</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="n">ROW_NUMBER</span><span class="p">()</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">streak_days</span><span class="w"> </span><span class="k">DESC</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">rank</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">streaks</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">streak_start</span><span class="p">,</span>
+<span class="w">    </span><span class="n">streak_end</span><span class="p">,</span>
+<span class="w">    </span><span class="n">streak_days</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">ranked</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">rank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</code></pre>
+</div>
+<h2 id="gaps">Gaps</h2>
+<h3 id="find-missing-dates">Find missing dates</h3>
+<p>Find dates on which a user had no activity.</p>
+<p>Approach:</p>
+<ul>
+<li>Start with each user's activity dates.</li>
+<li>Use <code>LAG()</code> to look at the previous activity date for that user.</li>
+<li>Calculate the number of days between the current and previous activity.</li>
+<li>If the gap is greater than 1 day, there are missing dates between them.</li>
+<li>Generate those missing dates using a recursive CTE.</li>
+<li>Return each missing date for each user.</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">distinct_days</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">DISTINCT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">activity_date</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">user_activity</span>
+<span class="p">),</span>
+
+<span class="n">gaps</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">activity_date</span><span class="p">,</span>
+<span class="w">        </span><span class="n">LAG</span><span class="p">(</span><span class="n">activity_date</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">user_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">activity_date</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">previous_date</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">distinct_days</span>
+<span class="p">),</span>
+
+<span class="n">missing_dates</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">DATEADD</span><span class="p">(</span><span class="k">DAY</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">previous_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">missing_date</span><span class="p">,</span>
+<span class="w">        </span><span class="n">activity_date</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">gap_end</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">gaps</span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">DATEDIFF</span><span class="p">(</span><span class="k">DAY</span><span class="p">,</span><span class="w"> </span><span class="n">previous_date</span><span class="p">,</span><span class="w"> </span><span class="n">activity_date</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="w">    </span><span class="k">UNION</span><span class="w"> </span><span class="k">ALL</span>
+
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">DATEADD</span><span class="p">(</span><span class="k">DAY</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">missing_date</span><span class="p">),</span>
+<span class="w">        </span><span class="n">gap_end</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">missing_dates</span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">missing_date</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">DATEADD</span><span class="p">(</span><span class="k">DAY</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gap_end</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">missing_date</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">missing_dates</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">missing_date</span><span class="p">;</span>
+</code></pre>
+</div>
+<h2 id="islands">Islands</h2>
+<h3 id="stock-price-above-100">stock price above 100</h3>
+<p>Find periods where a stock's price was above $100 for consecutive trading days.</p>
+<ul>
+<li>Start with one row per <strong>stock and trading date</strong>.</li>
+<li>Create a boolean flag:
+<ul>
+<li><code>1</code> if <code>close_price &gt; 100</code></li>
+<li><code>0</code> otherwise.</li>
+</ul></li>
+<li>Use <code>LAG()</code> to determine whether the previous trading day was also above <code>$100</code>.</li>
+<li>A new island begins when:
+<ul>
+<li>the current price is above <code>$100</code>, and</li>
+<li>the previous trading day was <strong>not</strong> above <code>$100</code>.</li>
+</ul></li>
+<li>Create an island ID using a cumulative <code>SUM()</code> of the island-start flag.</li>
+<li>Group by stock and island ID.</li>
+<li>Calculate the start date, end date, and number of consecutive trading days.</li>
+<li>Filter out islands that don't represent periods above <code>$100</code>.</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">flagged</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">stock_symbol</span><span class="p">,</span>
+<span class="w">        </span><span class="n">trading_date</span><span class="p">,</span>
+<span class="w">        </span><span class="n">close_price</span><span class="p">,</span>
+
+<span class="w">        </span><span class="k">CASE</span>
+<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">close_price</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_above_100</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">stock_prices</span>
+<span class="p">),</span>
+
+<span class="n">with_previous</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="n">LAG</span><span class="p">(</span><span class="n">is_above_100</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">stock_symbol</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">trading_date</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">previous_is_above_100</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">flagged</span>
+<span class="p">),</span>
+
+<span class="n">island_starts</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">CASE</span>
+<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">is_above_100</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">             </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">previous_is_above_100</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                  </span><span class="k">OR</span><span class="w"> </span><span class="n">previous_is_above_100</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span>
+<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_new_island</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">with_previous</span>
+<span class="p">),</span>
+
+<span class="n">islands</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">SUM</span><span class="p">(</span><span class="n">is_new_island</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">stock_symbol</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">trading_date</span>
+<span class="w">            </span><span class="k">ROWS</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="n">UNBOUNDED</span><span class="w"> </span><span class="n">PRECEDING</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">CURRENT</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">island_id</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">island_starts</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">stock_symbol</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="n">trading_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">period_start</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MAX</span><span class="p">(</span><span class="n">trading_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">period_end</span><span class="p">,</span>
+<span class="w">    </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">consecutive_trading_days</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">islands</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">is_above_100</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">stock_symbol</span><span class="p">,</span>
+<span class="w">    </span><span class="n">island_id</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">stock_symbol</span><span class="p">,</span>
+<span class="w">    </span><span class="n">period_start</span><span class="p">;</span>
+</code></pre>
+</div>
+<h3 id="customer-with-consecutive-day-purchases">customer with consecutive day purchases</h3>
+<p>Find customers who made purchases on 3 or more consecutive days.</p>
+<p>Approach:</p>
+<ul>
+<li>Start with the customer's purchase dates.</li>
+<li>Deduplicate dates so multiple purchases on the same day count as <strong>one active/purchase day</strong>.</li>
+<li>Use <code>ROW_NUMBER()</code> to number each customer's purchase days chronologically.</li>
+<li>Subtract the row number from the purchase date.
+<ul>
+<li>Consecutive dates produce the same value.</li>
+<li>A gap produces a different value.</li>
+</ul></li>
+<li>Group by <code>customer_id</code> and the derived value to create consecutive-day islands.</li>
+<li>Count the number of days in each island.</li>
+<li>Keep islands with <strong>3 or more days</strong>.</li>
+<li>Return the customer and the start/end of each qualifying streak.</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">distinct_days</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="k">DISTINCT</span>
+<span class="w">        </span><span class="n">customer_id</span><span class="p">,</span>
+<span class="w">        </span><span class="k">CAST</span><span class="p">(</span><span class="n">purchase_time</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">DATE</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">purchase_date</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">purchases</span>
+<span class="p">),</span>
+
+<span class="n">numbered</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">customer_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">purchase_date</span><span class="p">,</span>
+
+<span class="w">        </span><span class="n">ROW_NUMBER</span><span class="p">()</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">customer_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">purchase_date</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">rn</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">distinct_days</span>
+<span class="p">),</span>
+
+<span class="n">islands</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">customer_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">purchase_date</span><span class="p">,</span>
+
+<span class="w">        </span><span class="n">DATEADD</span><span class="p">(</span>
+<span class="w">            </span><span class="k">DAY</span><span class="p">,</span>
+<span class="w">            </span><span class="o">-</span><span class="n">rn</span><span class="p">,</span>
+<span class="w">            </span><span class="n">purchase_date</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">island_id</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">numbered</span>
+<span class="p">),</span>
+
+<span class="n">streaks</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">customer_id</span><span class="p">,</span>
+<span class="w">        </span><span class="k">MIN</span><span class="p">(</span><span class="n">purchase_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">streak_start</span><span class="p">,</span>
+<span class="w">        </span><span class="k">MAX</span><span class="p">(</span><span class="n">purchase_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">streak_end</span><span class="p">,</span>
+<span class="w">        </span><span class="k">COUNT</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">streak_days</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">islands</span>
+
+<span class="w">    </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">        </span><span class="n">customer_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">island_id</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">streak_start</span><span class="p">,</span>
+<span class="w">    </span><span class="n">streak_end</span><span class="p">,</span>
+<span class="w">    </span><span class="n">streak_days</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">streaks</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">streak_days</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">3</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">customer_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">streak_start</span><span class="p">;</span>
+</code></pre>
+</div>
+<h3 id="employee-consecutive-employment-periods">Employee consecutive employment periods</h3>
+<p>Given employment records, find continuous periods during which an employee worked for a company.</p>
+<p>For example, an employee might have multiple employment records where one period immediately follows another.</p>
+<p>Approach:</p>
+<ul>
+<li>Sort each employee's employment records by <code>start_date</code>.</li>
+<li>Use <code>LAG()</code> to get the previous employment period's <code>end_date</code>.</li>
+<li>Determine whether the current record is <strong>continuous</strong> with the previous one.
+<ul>
+<li>If <code>start_date &lt;= previous_end_date + 1 day</code>, there is no gap.</li>
+<li>Otherwise, a new employment period begins.</li>
+</ul></li>
+<li>Create a <code>is_new_period</code> flag.</li>
+<li>Use a cumulative <code>SUM()</code> of that flag to assign a period/island ID.</li>
+<li>Group by <code>employee_id</code> and the generated period ID.</li>
+<li>Take <code>MIN(start_date)</code> and <code>MAX(end_date)</code> to get the complete continuous employment period.</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">previous_periods</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">employee_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">company_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">start_date</span><span class="p">,</span>
+<span class="w">        </span><span class="n">end_date</span><span class="p">,</span>
+
+<span class="w">        </span><span class="n">LAG</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">employee_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">start_date</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">previous_end_date</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">employment</span>
+<span class="p">),</span>
+
+<span class="n">period_starts</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">CASE</span>
+<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">previous_end_date</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">              </span><span class="k">OR</span><span class="w"> </span><span class="n">start_date</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">DATEADD</span><span class="p">(</span><span class="k">DAY</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">previous_end_date</span><span class="p">)</span>
+<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_new_period</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">previous_periods</span>
+<span class="p">),</span>
+
+<span class="n">islands</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">SUM</span><span class="p">(</span><span class="n">is_new_period</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">employee_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">start_date</span>
+<span class="w">            </span><span class="k">ROWS</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="n">UNBOUNDED</span><span class="w"> </span><span class="n">PRECEDING</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">CURRENT</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">period_id</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">period_starts</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">employee_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">employment_start</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MAX</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">employment_end</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">islands</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">employee_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">period_id</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">employee_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">employment_start</span><span class="p">;</span>
+</code></pre>
+</div>
+<h2 id="merge-overlapping-date-ranges">Merge overlapping date ranges</h2>
+<p>Merge overlapping reservations.</p>
+<p>Cols:</p>
+<ul>
+<li>reservation_id</li>
+<li>room_id</li>
+<li>start_date</li>
+<li>end_date</li>
+</ul>
+<p>Approach:</p>
+<ul>
+<li>Partition reservations by <code>room_id</code>.</li>
+<li>Sort them by <code>start_date</code>.</li>
+<li>For each reservation, calculate the <strong>maximum <code>end_date</code> of all previous reservations</strong>.
+<ul>
+<li>We use a running <code>MAX()</code>, not just <code>LAG()</code>.</li>
+<li>This matters when one reservation overlaps an earlier reservation but not the immediately previous one.</li>
+</ul></li>
+<li>A new island starts when:
+<ul>
+<li>there is no previous reservation, or</li>
+<li><code>start_date &gt; previous_max_end</code>.</li>
+</ul></li>
+<li>Use a cumulative <code>SUM()</code> of the new-island flag to generate an <code>island_id</code>.</li>
+<li>Group by <code>room_id</code> and <code>island_id</code>.</li>
+<li>Take <code>MIN(start_date)</code> and <code>MAX(end_date)</code> to produce the merged reservation periods.</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">previous_ranges</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">room_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">reservation_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">start_date</span><span class="p">,</span>
+<span class="w">        </span><span class="n">end_date</span><span class="p">,</span>
+
+<span class="w">        </span><span class="k">MAX</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">room_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">start_date</span><span class="p">,</span><span class="w"> </span><span class="n">end_date</span>
+<span class="w">            </span><span class="k">ROWS</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="n">UNBOUNDED</span><span class="w"> </span><span class="n">PRECEDING</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">PRECEDING</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">previous_max_end</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">reservations</span>
+<span class="p">),</span>
+
+<span class="n">island_starts</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">CASE</span>
+<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">previous_max_end</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
+<span class="w">              </span><span class="k">OR</span><span class="w"> </span><span class="n">start_date</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">previous_max_end</span>
+<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_new_island</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">previous_ranges</span>
+<span class="p">),</span>
+
+<span class="n">islands</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">SUM</span><span class="p">(</span><span class="n">is_new_island</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">room_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">start_date</span><span class="p">,</span><span class="w"> </span><span class="n">end_date</span>
+<span class="w">            </span><span class="k">ROWS</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="n">UNBOUNDED</span><span class="w"> </span><span class="n">PRECEDING</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">CURRENT</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">island_id</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">island_starts</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">room_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">merged_start</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MAX</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">merged_end</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">islands</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">room_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">island_id</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">room_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">merged_start</span><span class="p">;</span>
+</code></pre>
+</div>
+<p>Given server status events, identify continuous periods of downtime.</p>
+<pre><code>10:00 UP
+10:05 DOWN
+10:10 DOWN
+10:15 DOWN
+10:20 UP
+</code></pre>
+<p>can use either :</p>
+<ol>
+<li><code>LAG()</code> to detect state transitions</li>
+<li><code>LEAD()</code> to pair a state with its recovery event.</li>
+</ol>
+<p><code>LAG()</code> to detect state transitions</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">previous_status</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">server_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">event_time</span><span class="p">,</span>
+<span class="w">        </span><span class="n">status</span><span class="p">,</span>
+
+<span class="w">        </span><span class="n">LAG</span><span class="p">(</span><span class="n">status</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">server_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">event_time</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">previous_status</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">server_status</span>
+<span class="p">),</span>
+
+<span class="n">downtime_starts</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">CASE</span>
+<span class="w">            </span><span class="k">WHEN</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'DOWN'</span>
+<span class="w">             </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">previous_status</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="s1">'DOWN'</span>
+<span class="w">                  </span><span class="k">OR</span><span class="w"> </span><span class="n">previous_status</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">)</span>
+<span class="w">            </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">END</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">is_downtime_start</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">previous_status</span>
+<span class="p">),</span>
+
+<span class="n">downtime_groups</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="o">*</span><span class="p">,</span>
+<span class="w">        </span><span class="k">SUM</span><span class="p">(</span><span class="n">is_downtime_start</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">server_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">event_time</span>
+<span class="w">            </span><span class="k">ROWS</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="n">UNBOUNDED</span><span class="w"> </span><span class="n">PRECEDING</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="k">CURRENT</span><span class="w"> </span><span class="k">ROW</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">downtime_id</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">downtime_starts</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">server_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">downtime_id</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MIN</span><span class="p">(</span><span class="n">event_time</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">downtime_start</span><span class="p">,</span>
+<span class="w">    </span><span class="k">MAX</span><span class="p">(</span><span class="n">event_time</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">last_down_event</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">downtime_groups</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'DOWN'</span>
+<span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">server_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">downtime_id</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span>
+<span class="w">    </span><span class="n">server_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">downtime_start</span><span class="p">;</span>
+</code></pre>
+</div>
+<p><code>LEAD()</code> to pair a state with its recovery event.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">server_id</span><span class="p">,</span>
+<span class="w">        </span><span class="n">event_time</span><span class="p">,</span>
+<span class="w">        </span><span class="n">status</span><span class="p">,</span>
+
+<span class="w">        </span><span class="n">LEAD</span><span class="p">(</span><span class="n">event_time</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">server_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">event_time</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">next_event_time</span><span class="p">,</span>
+
+<span class="w">        </span><span class="n">LEAD</span><span class="p">(</span><span class="n">status</span><span class="p">)</span><span class="w"> </span><span class="n">OVER</span><span class="w"> </span><span class="p">(</span>
+<span class="w">            </span><span class="n">PARTITION</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">server_id</span>
+<span class="w">            </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">event_time</span>
+<span class="w">        </span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">next_status</span>
+
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">server_status</span>
+<span class="p">)</span>
+
+<span class="k">SELECT</span>
+<span class="w">    </span><span class="n">server_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">event_time</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">downtime_start</span><span class="p">,</span>
+<span class="w">    </span><span class="n">next_event_time</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">recovery_time</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">events</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'DOWN'</span>
+<span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">next_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'UP'</span><span class="p">;</span>
+</code></pre>
+</div>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            2292 words &middot; 11m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-02.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">11m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 02 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>
