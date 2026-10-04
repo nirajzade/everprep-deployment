@@ -34,7 +34,7 @@
 
     <header>
         <h1>spark - theory</h1>
-        <p class="meta">10m read &middot; 1955 words</p>
+        <p class="meta">12m read &middot; 2461 words</p>
     </header>
 
     
@@ -50,6 +50,7 @@
     <li><a href="#checkpointing">Checkpointing</a></li>
     <li><a href="#todo-role-of-gc">TODO: Role of gc</a></li>
     <li><a href="#udf">UDF</a></li>
+    <li><a href="#reducebykey-vs-groupbykey">reduceByKey vs groupByKey</a></li>
 </ul></li>
     <li><a href="#delta-lake">Delta lake</a>
 <ul>
@@ -62,16 +63,30 @@
 </ul></li>
     <li><a href="#optimization-2">Optimization</a>
 <ul>
-    <li><a href="#aqe">AQE</a></li>
+    <li><a href="#aqe">AQE</a>
+<ul>
+    <li><a href="#what-it-does">What it does</a>
+<ul>
+    <li><a href="#coalesce-shuffle-partitions">COALESCE SHUFFLE PARTITIONS</a></li>
+    <li><a href="#change-join-strategy">CHANGE JOIN STRATEGY</a></li>
+    <li><a href="#handle-skewed-joins">HANDLE SKEWED JOINS</a></li>
+</ul></li>
+    <li><a href="#why-is-aqe-better-than-static-optimization">Why is AQE better than static optimization</a></li>
+    <li><a href="#when-aqe-doesn-t-work">When AQE doesn&#39;t work</a></li>
+</ul></li>
     <li><a href="#projection-pruning-predicate-pushdown">Projection pruning, predicate pushdown</a></li>
     <li><a href="#join-optimization">Join optimization</a></li>
     <li><a href="#cache-and-persist">Cache and persist</a></li>
     <li><a href="#driver-oom-vs-executor-oom">driver oom vs executor oom</a></li>
-    <li><a href="#reducebykey-vs-groupbykey">reduceByKey vs groupByKey</a></li>
 </ul></li>
+    <li><a href="#optimization-in-databricks">Optimization in databricks</a></li>
     <li><a href="#scenarios">Scenarios</a>
 <ul>
-    <li><a href="#data-skews-and-how-to-handle-them">Data skews, and how to handle them</a></li>
+    <li><a href="#data-skews-and-how-to-handle-them">Data skews, and how to handle them</a>
+<ul>
+    <li><a href="#to-detect-skew">To detect skew</a></li>
+    <li><a href="#solutions">Solutions</a></li>
+</ul></li>
 </ul></li>
     <li><a href="#warehouse-selection">Warehouse selection</a></li>
 </ul>
@@ -192,6 +207,55 @@ Persist caches the computed data but keeps the lineage.</p>
 <p>Arrow is faster because arrow is column based, while pickling is row based. So arrow takes advantage of SIMD etc and gives a tremendous performance improvement.</p>
 <pre><code>spark.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
 </code></pre>
+<h2 id="reducebykey-vs-groupbykey">reduceByKey vs groupByKey</h2>
+<p><code>groupByKey</code> shuffles all values belonging to a key, whereas <code>reduceByKey</code> performs local aggregation before the shuffle, reducing network traffic and memory usage. Therefore, use <code>reduceByKey</code> when you can express the operation as an associative and commutative reduction.</p>
+<p><code>reduceByKey</code> performs a <strong>Map-side Combine</strong>.</p>
+<ul>
+<li><strong>How it works:</strong> It merges data locally on each executor <em>before</em> sending anything across the network. If an executor has ten "Apple" records, it reduces them to one "Apple" record with a sum and then shuffles that single record.</li>
+<li><strong>Benefit:</strong> Massive reduction in network traffic and memory usage.</li>
+</ul>
+<p><code>groupByKey</code> is a "brute force" operation.</p>
+<ul>
+<li><strong>How it works:</strong> It shuffles <em>every single record</em> across the network to the reducing executor. All values for a key are collected into a single list in memory.</li>
+<li><strong>Risk:</strong> If you have a skewed key (e.g., millions of records for one "ID"), the executor will run out of memory (<code>OutOfMemoryError</code>) because it tries to hold that entire list in RAM.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>-</th>
+<th><code>reduceByKey</code></th>
+<th><code>groupByKey</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shuffle data</td>
+<td>Less</td>
+<td>More</td>
+</tr>
+<tr>
+<td>Map-side combine</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Memory usage</td>
+<td>Lower</td>
+<td>Higher</td>
+</tr>
+<tr>
+<td>Requires aggregation function</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Typical use</td>
+<td>Aggregations</td>
+<td>Need all values</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pro Tip:</strong> In the DataFrame API, when you use <code>df.groupBy("key").sum()</code>, Spark is smart enough to use the <code>reduceByKey</code> logic under the hood. You don't have to worry about this choice unless you are working with the low-level RDD API.</p>
 <h1 id="delta-lake">Delta lake</h1>
 <h2 id="schema-evolution">Schema evolution</h2>
 <p>Done when a table's MergeSchema is enabled</p>
@@ -208,6 +272,7 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>Doesn't replace OPTIMIZE</li>
 </ul>
 <p>Continuously re-organizes data around clustering columns.</p>
+<p>Use when data has high cardinality (so partitioning can't be used)</p>
 <table>
 <thead>
 <tr>
@@ -327,32 +392,16 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>Change join strategy</li>
 <li>Handle skewed joins</li>
 </ul>
-<p>AQE looks at statistics of data as it is written to shuffle files.</p>
-<p><strong>WHEN DOES AQE NOT WORK</strong><br/>
-So it doesn't work well if data is cached, because the current state of the df is frozen. So AQE cannot optimize it.</p>
-<p>Once data is cached, its execution plan in considered to be fixed. So AQE cannot modify it further.</p>
-<p>AQE's effectiveness changes based on where data is stored. The shuffle data write has varying levels of AQE awareness:</p>
-<ul>
-<li>DISK_ONLY - full awareness. AQE handles everything perfectly. Can coalesce and change join type.</li>
-<li>MEMORY<em>AND</em>DISK - partial awareness. Cannot coalesce, can change join type</li>
-<li>Persisted delta tables - unaware during write</li>
-</ul>
-<p>Doesn't work for:</p>
-<ul>
-<li>before first shuffle (as it is a runtime optimizer)</li>
-<li>in-memory cached data</li>
-<li>non equi joins</li>
-<li>threshold mismatches (config issues - workload didn't meet thresholds of skew or small)</li>
-<li>UDFs (non vectorized) are used</li>
-</ul>
-<p><strong>COALESCE SHUFFLE PARTITIONS</strong></p>
+<p>AQE looks at statistics of data as it is written to shuffle files. It is a runtime shuffle-stage-boundary optimizer.</p>
+<h3 id="what-it-does">What it does</h3>
+<h4 id="coalesce-shuffle-partitions">COALESCE SHUFFLE PARTITIONS</h4>
 <p>After a shuffle stage is completed, AQE looks at the partition sizes, and coalesces the partitions smaller than <code>minPartitionNum</code> to achieve target size specified in <code>advisoryPartitionSizeInBytes</code></p>
 <p>Variables are set in:</p>
 <ul>
 <li><code>spark.sql.adaptive.minPartitionSize</code></li>
 <li><code>spark.sql.adaptive.advisoryPartitionSizeInBytes</code></li>
 </ul>
-<p><strong>CHANGE JOIN STRATEGY</strong></p>
+<h4 id="change-join-strategy">CHANGE JOIN STRATEGY</h4>
 <p>Looks at the sizes of data.</p>
 <p>Uses variables in the scope <code>spark.sql.adaptive</code></p>
 <ul>
@@ -370,7 +419,7 @@ So it doesn't work well if data is cached, because the current state of the df i
 <li><code>advisoryPartitionSizeInBytes</code> is less than <code>maxShuffledHashJoinLocalMapThreshold</code></li>
 <li>All partitions are smaller than <code>advisoryPartitionSizeInBytes</code></li>
 </ul>
-<p><strong>HANDLE SKEWED JOINS</strong></p>
+<h4 id="handle-skewed-joins">HANDLE SKEWED JOINS</h4>
 <p>AQE detects oversized shuffle partitions, splits them into smaller pieces, and replicates the matching data from the other side so the join work can run in parallel.<br/>
 It doesn't use salting. It simply breaks down dataframes using split points directly on the dataframes.</p>
 <p>Detects skew using variables in scope <code>spark.sql.adaptive.skewJoin</code></p>
@@ -379,6 +428,62 @@ It doesn't use salting. It simply breaks down dataframes using split points dire
 AND
 partition_size &gt; skewedPartitionThresholdInBytes
 </code></pre>
+<h3 id="why-is-aqe-better-than-static-optimization">Why is AQE better than static optimization</h3>
+<p>AQE does runtime level-optimization. So it can deal with performance issues DURING the execution itself. So it handles problems as they occur, and we don't have to know them beforehand.</p>
+<ul>
+<li>Handling stale or missing statistics
+<ul>
+<li>Static optimization relies on cost based optimization, that needs up to date table statistics (row counts, histograms etc)</li>
+<li>If stats are outdates, the optimization chosen won't be optimal</li>
+<li>AQE will wait for the first stage of query to finish, and then look at the actual size of data written to shuffle files. Then it will re-plan next stage using 100% accurate runtime data</li>
+</ul></li>
+<li>Dynamic join selection
+<ul>
+<li>Static - A table might be 10GB on disk (too big to broadcast), but after you apply a strict <code>WHERE</code> filter, it shrinks to 2MB. A static optimizer often won't realize this and will stick to a heavy, shuffle-intensive join.</li>
+<li>AQE - AQE will see that post-filter table that came into this stage is tiny, and will optmize the join to a Broadcast Hash Join</li>
+</ul></li>
+<li>Solving smille file overhead
+<ul>
+<li>Static - Devs will have to manually tune spark.sql.shuffle.partitions. If set to 200 but result set is only 1mb, spark will launch 200 micro tasks, causing too much overhead</li>
+<li>AQE - it will coalesce partitions, and will detect the tiny slices of data and merge them into few appropriately sized tasks</li>
+</ul></li>
+<li>Skew management
+<ul>
+<li>Static - will treat every partition as equal. In case of skew, the executor will OOM, or make the stage choke up waiting for the skewed partition to be processed</li>
+<li>AQE - will detect the skewed partition, and will automatically split it into smaller chunks</li>
+</ul></li>
+</ul>
+<h3 id="when-aqe-doesn-t-work">When AQE doesn't work</h3>
+<ul>
+<li>Before first shuffle - aqe is runtime stage optimizer. Needs the first stage to be done so that it has the statistics to begin optimization</li>
+<li>Non shuffle operations (narrow transformations)</li>
+<li>Streaming data</li>
+<li>In-memory data (cached dataframes). Cache truncates logical lineage, so AQE can't look at how the data was distributed/skewed</li>
+<li>non-equi joins
+<ul>
+<li>join optimizations from AQE are built for equi joins.</li>
+</ul></li>
+<li>python UDFs (non-vectorized operations)
+<ul>
+<li>The output of a UDF is not predictable, so AQE has no idea how to optimize for it</li>
+</ul></li>
+</ul>
+<p>So it doesn't work well if data is cached, because the current state of the df is frozen. So AQE cannot optimize it.</p>
+<p>Once data is cached, its execution plan in considered to be fixed. So AQE cannot modify it further.</p>
+<p>AQE's effectiveness changes based on where data is stored. The shuffle data write has varying levels of AQE awareness:</p>
+<ul>
+<li>DISK_ONLY - full awareness. AQE handles everything perfectly. Can coalesce and change join type.</li>
+<li>MEMORY<em>AND</em>DISK - partial awareness. Cannot coalesce, can change join type</li>
+<li>Persisted delta tables - unaware during write</li>
+</ul>
+<p>Doesn't work for:</p>
+<ul>
+<li>before first shuffle (as it is a runtime optimizer)</li>
+<li>in-memory cached data</li>
+<li>non equi joins</li>
+<li>threshold mismatches (config issues - workload didn't meet thresholds of skew or small)</li>
+<li>UDFs (non vectorized) are used</li>
+</ul>
 <h2 id="projection-pruning-predicate-pushdown">Projection pruning, predicate pushdown</h2>
 <p>Cut down the data as much as possible before processing it.</p>
 <p>The words come from relational algebra</p>
@@ -454,58 +559,34 @@ Use it anyways when</p>
 <li>Spark job continues running - gets re-run on another executor and fails repeatedly</li>
 <li>Memory spill - seen in sparkui statistics</li>
 </ul>
-<h2 id="reducebykey-vs-groupbykey">reduceByKey vs groupByKey</h2>
-<p><code>groupByKey</code> shuffles all values belonging to a key, whereas <code>reduceByKey</code> performs local aggregation before the shuffle, reducing network traffic and memory usage. Therefore, use <code>reduceByKey</code> when you can express the operation as an associative and commutative reduction.</p>
-<p><code>reduceByKey</code> performs a <strong>Map-side Combine</strong>.</p>
+<h1 id="optimization-in-databricks">Optimization in databricks</h1>
 <ul>
-<li><strong>How it works:</strong> It merges data locally on each executor <em>before</em> sending anything across the network. If an executor has ten "Apple" records, it reduces them to one "Apple" record with a sum and then shuffles that single record.</li>
-<li><strong>Benefit:</strong> Massive reduction in network traffic and memory usage.</li>
-</ul>
-<p><code>groupByKey</code> is a "brute force" operation.</p>
+<li>Use photon engine</li>
+<li>Optimize data layout (data skipping)
 <ul>
-<li><strong>How it works:</strong> It shuffles <em>every single record</em> across the network to the reducing executor. All values for a key are collected into a single list in memory.</li>
-<li><strong>Risk:</strong> If you have a skewed key (e.g., millions of records for one "ID"), the executor will run out of memory (<code>OutOfMemoryError</code>) because it tries to hold that entire list in RAM.</li>
+<li>Liquid clustering</li>
+<li>File sizing (run optimize to merge small files into larger efficient files)</li>
+</ul></li>
+<li>Leverage predictive I/O
+<ul>
+<li>Use delta lake. Predictive I/O will handle indexing and caching of data at storage levels, increasing access speed</li>
+</ul></li>
+<li>Use serverless and auto-scaling
+<ul>
+<li>Avoids fixed rigid cluster sizes</li>
+<li>Serverless SQL warehouses for BI and SQL tasks. It will scale automatically, and shut down during inactivity</li>
+<li>Auto scaling - set a range (eg - 2 to 5)</li>
+</ul></li>
+<li>Select compute well
+<ul>
+<li>Memory optimized - use for pipelines heavy in shuffles, joins and caching</li>
+<li>Compute optimized - for ML tasks, complex UDFs</li>
+<li>Storage optmized - use for very large scale delta lake oeprations, because they have fast local NVME SSDs for caching (spill to disk)</li>
+</ul></li>
 </ul>
-<table>
-<thead>
-<tr>
-<th>-</th>
-<th><code>reduceByKey</code></th>
-<th><code>groupByKey</code></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Shuffle data</td>
-<td>Less</td>
-<td>More</td>
-</tr>
-<tr>
-<td>Map-side combine</td>
-<td>✅</td>
-<td>❌</td>
-</tr>
-<tr>
-<td>Memory usage</td>
-<td>Lower</td>
-<td>Higher</td>
-</tr>
-<tr>
-<td>Requires aggregation function</td>
-<td>✅</td>
-<td>❌</td>
-</tr>
-<tr>
-<td>Typical use</td>
-<td>Aggregations</td>
-<td>Need all values</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Pro Tip:</strong> In the DataFrame API, when you use <code>df.groupBy("key").sum()</code>, Spark is smart enough to use the <code>reduceByKey</code> logic under the hood. You don't have to worry about this choice unless you are working with the low-level RDD API.</p>
 <h1 id="scenarios">Scenarios</h1>
 <h2 id="data-skews-and-how-to-handle-them">Data skews, and how to handle them</h2>
-<p>To detect skew:</p>
+<h3 id="to-detect-skew">To detect skew</h3>
 <ul>
 <li>Check spark ui's summary metrics
 <ul>
@@ -515,7 +596,7 @@ Use it anyways when</p>
 <li>Disk spills - the large partitions will spill to disk. In tasks, look at "Peak execution memory" and "disk spill"</li>
 </ul></li>
 </ul>
-<p>Solutions</p>
+<h3 id="solutions">Solutions</h3>
 <ul>
 <li>Enable AQE</li>
 <li>Manually handle the skew - salting (when AQE isn't available, or isn't working well)</li>
@@ -542,9 +623,9 @@ Use it anyways when</p>
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            1955 words &middot; 10m read<br>
+            2461 words &middot; 12m read<br>
             Written as a markdown note in Obsidian.
-            Built into this page by a Python script on 2026-10-02.
+            Built into this page by a Python script on 2026-10-04.
         </footer>
     </article>
 
@@ -574,7 +655,7 @@ Use it anyways when</p>
             </li>
             
             <li class="is-current">
-                <span class="muted">10m read</span>
+                <span class="muted">12m read</span>
                 <a href="spark-theory.html">spark - theory</a>
             </li>
             
@@ -594,7 +675,7 @@ Use it anyways when</p>
 
     <footer class="site-footer">
         <p><a href="index.html">&larr; everprep</a></p>
-        <p>Generated on 02 Oct 2026 from markdown notes.</p>
+        <p>Generated on 04 Oct 2026 from markdown notes.</p>
     </footer>
 
 </div>
