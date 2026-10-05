@@ -34,7 +34,7 @@
 
     <header>
         <h1>spark - code</h1>
-        <p class="meta">24m read &middot; 4798 words</p>
+        <p class="meta">24m read &middot; 4830 words</p>
     </header>
 
     
@@ -64,6 +64,7 @@
     <li><a href="#extract">Extract</a></li>
     <li><a href="#boundaries-truncation">Boundaries / truncation</a></li>
 </ul></li>
+    <li><a href="#functions">Functions</a></li>
     <li><a href="#i-o">I/O</a>
 <ul>
     <li><a href="#delta-lake">Delta lake</a>
@@ -111,7 +112,7 @@
     <li><a href="#handle-nulls">Handle nulls</a></li>
     <li><a href="#deduplicate">Deduplicate</a></li>
 </ul></li>
-    <li><a href="#functions">Functions</a>
+    <li><a href="#functions-2">Functions</a>
 <ul>
     <li><a href="#group-concat">group_concat</a></li>
 </ul></li>
@@ -451,6 +452,15 @@ MMM    → month name
 
 <span class="n">time_trunc</span> <span class="p">(</span><span class="n">unit</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span><span class="n">col</span><span class="p">)</span>
 <span class="c1"># takes - "hour", "minute", "second", "millisecond", "microsecond"</span>
+</code></pre>
+</div>
+<h1 id="functions">Functions</h1>
+<p>Round a number</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+
+<span class="c1"># round to 1 decimal place</span>
+<span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"rounded"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">rount</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </code></pre>
 </div>
 <h1 id="i-o">I/O</h1>
@@ -1307,7 +1317,7 @@ MMM    → month name
 <span class="n">unique_names_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropDuplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"surname"</span><span class="p">])</span>
 </code></pre>
 </div>
-<h1 id="functions">Functions</h1>
+<h1 id="functions-2">Functions</h1>
 <h2 id="group-concat">group_concat</h2>
 <p>In PySpark, the equivalent of SQL <code>GROUP_CONCAT</code> is typically <code>collect_list()</code> + <code>concat_ws()</code>.</p>
 <p><code>concat_ws</code> means concat with separator</p>
@@ -1376,9 +1386,9 @@ MMM    → month name
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            4798 words &middot; 24m read<br>
+            4830 words &middot; 24m read<br>
             Written as a markdown note in Obsidian.
-            Built into this page by a Python script on 2026-10-04.
+            Built into this page by a Python script on 2026-10-05.
         </footer>
     </article>
 
@@ -1428,7 +1438,7 @@ MMM    → month name
 
     <footer class="site-footer">
         <p><a href="index.html">&larr; everprep</a></p>
-        <p>Generated on 04 Oct 2026 from markdown notes.</p>
+        <p>Generated on 05 Oct 2026 from markdown notes.</p>
     </footer>
 
 </div>
