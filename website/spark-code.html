@@ -34,7 +34,7 @@
 
     <header>
         <h1>spark - code</h1>
-        <p class="meta">24m read &middot; 4830 words</p>
+        <p class="meta">24m read &middot; 4834 words</p>
     </header>
 
     
@@ -65,6 +65,23 @@
     <li><a href="#boundaries-truncation">Boundaries / truncation</a></li>
 </ul></li>
     <li><a href="#functions">Functions</a></li>
+    <li><a href="#workflows">Workflows</a>
+<ul>
+    <li><a href="#handle-nulls">Handle nulls</a></li>
+    <li><a href="#deduplicate">Deduplicate</a></li>
+</ul></li>
+    <li><a href="#functions-2">Functions</a>
+<ul>
+    <li><a href="#group-concat">group_concat</a></li>
+</ul></li>
+    <li><a href="#scd">SCD</a>
+<ul>
+    <li><a href="#scd-1">scd 1</a></li>
+    <li><a href="#scd-2">scd 2</a></li>
+    <li><a href="#scd-3">scd 3</a></li>
+    <li><a href="#scd-4">scd 4</a></li>
+    <li><a href="#scd-5">scd 5</a></li>
+</ul></li>
     <li><a href="#i-o">I/O</a>
 <ul>
     <li><a href="#delta-lake">Delta lake</a>
@@ -98,24 +115,7 @@
     <li><a href="#read-parallel">read - parallel</a></li>
     <li><a href="#write-4">write</a></li>
 </ul></li>
-    <li><a href="#scd">scd</a></li>
-    <li><a href="#scd-2">SCD</a>
-<ul>
-    <li><a href="#scd-1">scd 1</a></li>
-    <li><a href="#scd-2-2">scd 2</a></li>
-    <li><a href="#scd-3">scd 3</a></li>
-    <li><a href="#scd-4">scd 4</a></li>
-    <li><a href="#scd-5">scd 5</a></li>
-</ul></li>
-    <li><a href="#workflows">Workflows</a>
-<ul>
-    <li><a href="#handle-nulls">Handle nulls</a></li>
-    <li><a href="#deduplicate">Deduplicate</a></li>
-</ul></li>
-    <li><a href="#functions-2">Functions</a>
-<ul>
-    <li><a href="#group-concat">group_concat</a></li>
-</ul></li>
+    <li><a href="#scd-6">scd</a></li>
 </ul>
         </div>
     </nav>
@@ -463,6 +463,394 @@ MMM    → month name
 <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"rounded"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">rount</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 </code></pre>
 </div>
+<h1 id="workflows">Workflows</h1>
+<h2 id="handle-nulls">Handle nulls</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Coalesce</span>
+<span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"col_processed"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"col_processed"</span><span class="p">),</span> <span class="n">col</span><span class="p">(</span><span class="s2">"other_col"</span><span class="p">)))</span>
+
+<span class="c1"># 1 Fill nulls</span>
+<span class="n">fill_na_values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"col1"</span><span class="p">:</span> <span class="n">val1</span><span class="p">,</span> <span class="s2">"col2"</span><span class="p">:</span> <span class="n">val2</span><span class="p">}</span>
+<span class="n">df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fill_na_values</span><span class="p">)</span> <span class="c1"># set col's values through dict</span>
+
+<span class="c1"># 2 Drop nulls</span>
+<span class="n">df</span><span class="o">.</span><span class="n">na</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"col1"</span><span class="p">,</span> <span class="s2">"col2"</span><span class="p">])</span> <span class="c1"># specifying subset is optional</span>
+
+<span class="c1"># 3 Handle using case</span>
+<span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">,</span>
+    <span class="n">when</span><span class="p">(</span>
+        <span class="n">col</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">isNull</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="deduplicate">Deduplicate</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># all cols</span>
+<span class="n">fully_unique_rows_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+<span class="c1"># specific cols</span>
+<span class="n">unique_names_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropDuplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"surname"</span><span class="p">])</span>
+</code></pre>
+</div>
+<h1 id="functions-2">Functions</h1>
+<h2 id="group-concat">group_concat</h2>
+<p>In PySpark, the equivalent of SQL <code>GROUP_CONCAT</code> is typically <code>collect_list()</code> + <code>concat_ws()</code>.</p>
+<p><code>concat_ws</code> means concat with separator</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s2">"customerId"</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">concat_ws</span><span class="p">(</span><span class="s2">", "</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s2">"productName"</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"products"</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<blockquote>
+<p>Note: for unique values, use collect<em>set() instead of collect</em>list()</p>
+</blockquote>
+<p>Input:</p>
+<table>
+<thead>
+<tr>
+<th>customerId</th>
+<th>productName</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Laptop</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Mouse</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Keyboard</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Monitor</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Webcam</td>
+</tr>
+</tbody>
+</table>
+<p>Output:</p>
+<table>
+<thead>
+<tr>
+<th>customerId</th>
+<th>products</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Laptop, Mouse, Keyboard</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Monitor, Webcam</td>
+</tr>
+</tbody>
+</table>
+<h1 id="scd">SCD</h1>
+<ul>
+<li>scd 1 - corrections/current-state data 
+<ul>
+<li>overwrite existing</li>
+</ul></li>
+<li>scd 2 - audit history/reporting
+<ul>
+<li>insert new row for change, mark older as expired</li>
+</ul></li>
+<li>scd 3 - only want immediate previous value
+<ul>
+<li>store current and previous value in separate columns</li>
+</ul></li>
+<li>scd 4 - separate operational(current) and historical workloads
+<ul>
+<li>update current table and push update to historical table (append only history)</li>
+<li>eg - track cart - to know what's currently in cart, but also know what was added and removed from the cart</li>
+</ul></li>
+<li>scd 6 - complex reporting requirements
+<ul>
+<li>combination of 1, 2, 3</li>
+</ul></li>
+</ul>
+<h2 id="scd-1">scd 1</h2>
+<p>Overwrite existing data</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.customer_id = s.customer_id"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdateAll</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-2">scd 2</h2>
+<ul>
+<li>cols - id, name, city</li>
+<li>added cols - surrogate<em>key, valid</em>from, valid<em>to, is</em>current</li>
+</ul>
+<p><strong>single merge</strong></p>
+<p>Create a staged source containing 2 tows - one to expire existing row, one to insert new version</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="c1"># Create source rows:</span>
+<span class="c1"># 1. A "matched" row to expire the existing version</span>
+<span class="c1"># 2. An "unmatched" row to insert the new version</span>
+<span class="n">staged</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">))</span> <span class="o">&amp;</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.is_current"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"left"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+        <span class="s2">"changed"</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">)</span><span class="o">.</span><span class="n">isNotNull</span><span class="p">()</span> <span class="o">&amp;</span>
+        <span class="p">(</span>
+            <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
+            <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+        <span class="s2">"merge_id"</span><span class="p">,</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"id"</span><span class="p">))</span>
+         <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Duplicate changed rows:</span>
+<span class="c1">#   merge_id = id      -&gt; matches existing row and expires it</span>
+<span class="c1">#   merge_id = NULL    -&gt; doesn't match, so inserts new version</span>
+<span class="n">expire_rows</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">)</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+    <span class="s2">"merge_id"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">insert_rows</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+    <span class="s2">"merge_id"</span><span class="p">,</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">"long"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">staged</span> <span class="o">=</span> <span class="n">expire_rows</span><span class="o">.</span><span class="n">unionByName</span><span class="p">(</span><span class="n">insert_rows</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">staged</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.merge_id AND t.is_current = true"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">,</span>
+            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
+            <span class="s2">"valid_from"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span><span class="p">,</span>
+            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"NULL"</span><span class="p">,</span>
+            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"true"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<p><strong>2 merges</strong></p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="c1"># 1. Find existing records whose attributes changed</span>
+<span class="n">changed</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">))</span> <span class="o">&amp;</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.is_current"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"inner"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># 2. Expire old versions</span>
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">changed</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id AND t.is_current = true"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">,</span>
+            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="c1"># 3. Insert new versions + genuinely new records</span>
+<span class="n">new_rows</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"is_current"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_from"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_to"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">))</span>
+<span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">new_rows</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id AND t.is_current = true"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-3">scd 3</h2>
+<p>cols - id, name, city</p>
+<ul>
+<li>added cols - previous<em>name, previous</em>city</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+
+<span class="p">(</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"previous_name"</span><span class="p">:</span> <span class="s2">"t.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
+            <span class="s2">"previous_city"</span><span class="p">:</span> <span class="s2">"t.city"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"previous_name"</span><span class="p">:</span> <span class="s2">"NULL"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
+            <span class="s2">"previous_city"</span><span class="p">:</span> <span class="s2">"NULL"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-4">scd 4</h2>
+<ul>
+<li>cols - id, name, city</li>
+<li>added cols - valid<em>from, valid</em>to</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="n">current</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
+<span class="n">history</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer_history"</span><span class="p">)</span>
+
+<span class="c1"># Find changed existing records</span>
+<span class="n">changed</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">),</span>
+        <span class="s2">"inner"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
+        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
+        <span class="s2">"t.id"</span><span class="p">,</span>
+        <span class="s2">"t.name"</span><span class="p">,</span>
+        <span class="s2">"t.city"</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># 1. Copy old versions to history</span>
+<span class="p">(</span>
+    <span class="n">changed</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_from"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_to"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
+    <span class="o">.</span><span class="n">write</span>
+    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"delta"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">"append"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">saveAsTable</span><span class="p">(</span><span class="s2">"dim_customer_history"</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># 2. Update current table</span>
+<span class="p">(</span>
+    <span class="n">current</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
+        <span class="s2">"t.id = s.id"</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
+        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
+            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="scd-5">scd 5</h2>
+<p>--</p>
 <h1 id="i-o">I/O</h1>
 <h2 id="delta-lake">Delta lake</h2>
 <h3 id="read">read</h3>
@@ -993,402 +1381,14 @@ MMM    → month name
 <li>Never put credentials in code — always <code>dbutils.secrets.get</code>.</li>
 <li>Parallel writers (<code>numPartitions</code> on write) can cause deadlocks on SQL Server — tune based on target table's lock behaviour.</li>
 </ul>
-<h1 id="scd">scd</h1>
-<h1 id="scd-2">SCD</h1>
-<ul>
-<li>scd 1 - corrections/current-state data 
-<ul>
-<li>overwrite existing</li>
-</ul></li>
-<li>scd 2 - audit history/reporting
-<ul>
-<li>insert new row for change, mark older as expired</li>
-</ul></li>
-<li>scd 3 - only want immediate previous value
-<ul>
-<li>store current and previous value in separate columns</li>
-</ul></li>
-<li>scd 4 - separate operational(current) and historical workloads
-<ul>
-<li>update current table and push update to historical table (append only history)</li>
-<li>eg - track cart - to know what's currently in cart, but also know what was added and removed from the cart</li>
-</ul></li>
-<li>scd 6 - complex reporting requirements
-<ul>
-<li>combination of 1, 2, 3</li>
-</ul></li>
-</ul>
-<h2 id="scd-1">scd 1</h2>
-<p>Overwrite existing data</p>
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
-
-<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
-
-<span class="p">(</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
-        <span class="s2">"t.customer_id = s.customer_id"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenMatchedUpdateAll</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<h2 id="scd-2-2">scd 2</h2>
-<ul>
-<li>cols - id, name, city</li>
-<li>added cols - surrogate<em>key, valid</em>from, valid<em>to, is</em>current</li>
-</ul>
-<p><strong>single merge</strong></p>
-<p>Create a staged source containing 2 tows - one to expire existing row, one to insert new version</p>
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-
-<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
-
-<span class="c1"># Create source rows:</span>
-<span class="c1"># 1. A "matched" row to expire the existing version</span>
-<span class="c1"># 2. An "unmatched" row to insert the new version</span>
-<span class="n">staged</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">))</span> <span class="o">&amp;</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.is_current"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span>
-        <span class="s2">"left"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
-        <span class="s2">"changed"</span><span class="p">,</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">)</span><span class="o">.</span><span class="n">isNotNull</span><span class="p">()</span> <span class="o">&amp;</span>
-        <span class="p">(</span>
-            <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
-            <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">),</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">),</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">),</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
-        <span class="s2">"merge_id"</span><span class="p">,</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"id"</span><span class="p">))</span>
-         <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="c1"># Duplicate changed rows:</span>
-<span class="c1">#   merge_id = id      -&gt; matches existing row and expires it</span>
-<span class="c1">#   merge_id = NULL    -&gt; doesn't match, so inserts new version</span>
-<span class="n">expire_rows</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">"changed"</span><span class="p">)</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
-    <span class="s2">"merge_id"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">insert_rows</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
-    <span class="s2">"merge_id"</span><span class="p">,</span>
-    <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">"long"</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">staged</span> <span class="o">=</span> <span class="n">expire_rows</span><span class="o">.</span><span class="n">unionByName</span><span class="p">(</span><span class="n">insert_rows</span><span class="p">)</span>
-
-<span class="p">(</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-        <span class="n">staged</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
-        <span class="s2">"t.id = s.merge_id AND t.is_current = true"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
-        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">,</span>
-            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
-        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
-            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
-            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
-            <span class="s2">"valid_from"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span><span class="p">,</span>
-            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"NULL"</span><span class="p">,</span>
-            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"true"</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<p><strong>2 merges</strong></p>
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-
-<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
-
-<span class="c1"># 1. Find existing records whose attributes changed</span>
-<span class="n">changed</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">))</span> <span class="o">&amp;</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.is_current"</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">),</span>
-        <span class="s2">"inner"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="c1"># 2. Expire old versions</span>
-<span class="p">(</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-        <span class="n">changed</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
-        <span class="s2">"t.id = s.id AND t.is_current = true"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
-        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"is_current"</span><span class="p">:</span> <span class="s2">"false"</span><span class="p">,</span>
-            <span class="s2">"valid_to"</span><span class="p">:</span> <span class="s2">"current_timestamp()"</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="p">)</span>
-
-<span class="c1"># 3. Insert new versions + genuinely new records</span>
-<span class="n">new_rows</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">source_df</span>
-    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"is_current"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span>
-    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_from"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
-    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_to"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">))</span>
-<span class="p">)</span>
-
-<span class="p">(</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-        <span class="n">new_rows</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
-        <span class="s2">"t.id = s.id AND t.is_current = true"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<h2 id="scd-3">scd 3</h2>
-<p>cols - id, name, city</p>
-<ul>
-<li>added cols - previous<em>name, previous</em>city</li>
-</ul>
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-
-<span class="n">target</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
-
-<span class="p">(</span>
-    <span class="n">target</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
-        <span class="s2">"t.id = s.id"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
-        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
-            <span class="s2">"previous_name"</span><span class="p">:</span> <span class="s2">"t.name"</span><span class="p">,</span>
-            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
-            <span class="s2">"previous_city"</span><span class="p">:</span> <span class="s2">"t.city"</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
-        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
-            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
-            <span class="s2">"previous_name"</span><span class="p">:</span> <span class="s2">"NULL"</span><span class="p">,</span>
-            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span><span class="p">,</span>
-            <span class="s2">"previous_city"</span><span class="p">:</span> <span class="s2">"NULL"</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<h2 id="scd-4">scd 4</h2>
-<ul>
-<li>cols - id, name, city</li>
-<li>added cols - valid<em>from, valid</em>to</li>
-</ul>
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-
-<span class="n">current</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer"</span><span class="p">)</span>
-<span class="n">history</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forName</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"dim_customer_history"</span><span class="p">)</span>
-
-<span class="c1"># Find changed existing records</span>
-<span class="n">changed</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"dim_customer"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">),</span>
-        <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.id"</span><span class="p">),</span>
-        <span class="s2">"inner"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.name"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.name"</span><span class="p">))</span> <span class="o">|</span>
-        <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"s.city"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">F</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"t.city"</span><span class="p">))</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">select</span><span class="p">(</span>
-        <span class="s2">"t.id"</span><span class="p">,</span>
-        <span class="s2">"t.name"</span><span class="p">,</span>
-        <span class="s2">"t.city"</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="c1"># 1. Copy old versions to history</span>
-<span class="p">(</span>
-    <span class="n">changed</span>
-    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_from"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
-    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"valid_to"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">current_timestamp</span><span class="p">())</span>
-    <span class="o">.</span><span class="n">write</span>
-    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"delta"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">"append"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">saveAsTable</span><span class="p">(</span><span class="s2">"dim_customer_history"</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="c1"># 2. Update current table</span>
-<span class="p">(</span>
-    <span class="n">current</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">merge</span><span class="p">(</span>
-        <span class="n">source_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"s"</span><span class="p">),</span>
-        <span class="s2">"t.id = s.id"</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenMatchedUpdate</span><span class="p">(</span>
-        <span class="nb">set</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
-            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">whenNotMatchedInsert</span><span class="p">(</span>
-        <span class="n">values</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"s.id"</span><span class="p">,</span>
-            <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"s.name"</span><span class="p">,</span>
-            <span class="s2">"city"</span><span class="p">:</span> <span class="s2">"s.city"</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<h2 id="scd-5">scd 5</h2>
-<p>--</p>
-<h1 id="workflows">Workflows</h1>
-<h2 id="handle-nulls">Handle nulls</h2>
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># Coalesce</span>
-<span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"col_processed"</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"col_processed"</span><span class="p">),</span> <span class="n">col</span><span class="p">(</span><span class="s2">"other_col"</span><span class="p">)))</span>
-
-<span class="c1"># Fill nulls</span>
-<span class="n">fill_na_values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"col1"</span><span class="p">:</span> <span class="n">val1</span><span class="p">,</span> <span class="s2">"col2"</span><span class="p">:</span> <span class="n">val2</span><span class="p">}</span>
-<span class="n">df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fill_na_values</span><span class="p">)</span> <span class="c1"># set col's values through dict</span>
-
-<span class="c1"># Drop nulls</span>
-<span class="n">df</span><span class="o">.</span><span class="n">na</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"col1"</span><span class="p">,</span> <span class="s2">"col2"</span><span class="p">])</span> <span class="c1"># specifying subset is optional</span>
-
-<span class="c1"># Using case</span>
-<span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">,</span>
-    <span class="n">when</span><span class="p">(</span>
-        <span class="n">col</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">isNull</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"some_column"</span><span class="p">)</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<h2 id="deduplicate">Deduplicate</h2>
-<div class="codehilite">
-<pre><span></span><code><span class="c1"># all cols</span>
-<span class="n">fully_unique_rows_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
-<span class="c1"># specific cols</span>
-<span class="n">unique_names_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropDuplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"surname"</span><span class="p">])</span>
-</code></pre>
-</div>
-<h1 id="functions-2">Functions</h1>
-<h2 id="group-concat">group_concat</h2>
-<p>In PySpark, the equivalent of SQL <code>GROUP_CONCAT</code> is typically <code>collect_list()</code> + <code>concat_ws()</code>.</p>
-<p><code>concat_ws</code> means concat with separator</p>
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">functions</span> <span class="k">as</span> <span class="n">F</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s2">"customerId"</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
-    <span class="n">F</span><span class="o">.</span><span class="n">concat_ws</span><span class="p">(</span><span class="s2">", "</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s2">"productName"</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"products"</span><span class="p">)</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<blockquote>
-<p>Note: for unique values, use collect<em>set() instead of collect</em>list()</p>
-</blockquote>
-<p>Input:</p>
-<table>
-<thead>
-<tr>
-<th>customerId</th>
-<th>productName</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>Laptop</td>
-</tr>
-<tr>
-<td>1</td>
-<td>Mouse</td>
-</tr>
-<tr>
-<td>1</td>
-<td>Keyboard</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Monitor</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Webcam</td>
-</tr>
-</tbody>
-</table>
-<p>Output:</p>
-<table>
-<thead>
-<tr>
-<th>customerId</th>
-<th>products</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td>Laptop, Mouse, Keyboard</td>
-</tr>
-<tr>
-<td>2</td>
-<td>Monitor, Webcam</td>
-</tr>
-</tbody>
-</table>
+<h1 id="scd-6">scd</h1>
 
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            4830 words &middot; 24m read<br>
+            4834 words &middot; 24m read<br>
             Written as a markdown note in Obsidian.
-            Built into this page by a Python script on 2026-10-08.
+            Built into this page by a Python script on 2026-10-09.
         </footer>
     </article>
 
@@ -1410,6 +1410,11 @@ MMM    → month name
             <li>
                 <span class="muted">2m read</span>
                 <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="python-leetcode.html">python - leetcode</a>
             </li>
             
             <li class="is-current">
@@ -1438,7 +1443,7 @@ MMM    → month name
 
     <footer class="site-footer">
         <p><a href="index.html">&larr; everprep</a></p>
-        <p>Generated on 08 Oct 2026 from markdown notes.</p>
+        <p>Generated on 09 Oct 2026 from markdown notes.</p>
     </footer>
 
 </div>

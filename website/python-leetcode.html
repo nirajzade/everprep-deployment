@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>python - leetcode - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>python - leetcode</h1>
+        <p class="meta">10m read &middot; 2024 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#python-leetcode">python - leetcode</a>
+<ul>
+    <li><a href="#how-to-get-good-at-this">How to get good at this</a>
+<ul>
+    <li><a href="#learning-new-patterns">Learning new patterns</a></li>
+    <li><a href="#remembering-studied-patterns">Remembering studied patterns</a></li>
+</ul></li>
+    <li><a href="#patterns-list">Patterns list</a>
+<ul>
+    <li><a href="#two-pointers">Two Pointers</a>
+<ul>
+    <li><a href="#identify">Identify</a></li>
+    <li><a href="#problems-2-pointers">Problems - 2 pointers</a></li>
+    <li><a href="#problems-fast-slow-pointers">Problems - Fast &amp; Slow Pointers</a></li>
+</ul></li>
+    <li><a href="#dfs">DFS</a>
+<ul>
+    <li><a href="#identification">Identification</a></li>
+    <li><a href="#problems">Problems</a></li>
+</ul></li>
+    <li><a href="#bfs">BFS</a>
+<ul>
+    <li><a href="#identification-2">Identification</a></li>
+</ul></li>
+    <li><a href="#prefix-sum">Prefix Sum</a>
+<ul>
+    <li><a href="#identification-3">Identification</a></li>
+    <li><a href="#problems-2">Problems</a></li>
+</ul></li>
+    <li><a href="#heap-priority-queue">Heap / Priority Queue</a>
+<ul>
+    <li><a href="#problems-3">Problems</a></li>
+</ul></li>
+    <li><a href="#dynamic-programming">Dynamic Programming</a>
+<ul>
+    <li><a href="#problems-4">Problems</a></li>
+</ul></li>
+    <li><a href="#binary-search">Binary Search</a>
+<ul>
+    <li><a href="#problems-5">Problems</a></li>
+</ul></li>
+</ul></li>
+    <li><a href="#misc">Misc</a>
+<ul>
+    <li><a href="#dfs-vs-bfs">DFS vs BFS</a></li>
+</ul></li>
+</ul></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<h1 id="python-leetcode">python - leetcode</h1>
+<p>This is the easiest gatekeeping round in existence. And it is a blessing for people like me.</p>
+<p>Understand that leetcode is all about pattern recognition.</p>
+<p>After reading a problem, I should immediately know what pattern it requires.</p>
+<p>Easy problems don't really have any pattern required. Medium problems require using 1 pattern. Hard problems require using 2 or more patterns.</p>
+<p>Solving medium problems is enough to crack most big tech interviews.</p>
+<h2 id="how-to-get-good-at-this">How to get good at this</h2>
+<h3 id="learning-new-patterns">Learning new patterns</h3>
+<p>Solve lists only (interview 150, blind 75 etc).</p>
+<p>Pick the next problem from the list. Try solving it. If you cannot solve the problem in 45 mins, give up and look at the solution. If the solution has a new patterns that I didn't know, then the entire day is dedicated to that pattern only. Find more problems that have this same pattern and solve them until I know the pattern.</p>
+<ol start="3">
+<li>Pick next problem from the list</li>
+<li>Try solving the problem. If cannot solve it in 45mins, give up and look at the solution.</li>
+<li>If the problem has a new pattern, then the entire day is dedicated to that pattern only.</li>
+<li>GOTO (1)</li>
+</ol>
+<p>Know and set my limits:</p>
+<ol>
+<li>I can learn only one new pattern in a day</li>
+</ol>
+<h3 id="remembering-studied-patterns">Remembering studied patterns</h3>
+<p>I can revise ALL previously known patterns in under an hour.</p>
+<p>For remembering, make a note of all patterns I know - pattern name, what problems look like, sample code. This note will be revised daily. Revision typically takes 20 minutes once I am used to it.</p>
+<h2 id="patterns-list">Patterns list</h2>
+<h3 id="two-pointers">Two Pointers</h3>
+<p>Core idea - maintain 2 indices that move through the data, usually from opposite ends or in the same direction.</p>
+<p>Opposite direction:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">two_sum_sorted</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">while</span> <span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">:</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">left</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">right</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">total</span> <span class="o">==</span> <span class="n">target</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">total</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">:</span>
+            <span class="n">left</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">right</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</code></pre>
+</div>
+<p>Same direction (slow/fast pointer):</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove_duplicates</span><span class="p">(</span><span class="n">nums</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nums</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">slow</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">fast</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">nums</span><span class="p">[</span><span class="n">fast</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nums</span><span class="p">[</span><span class="n">slow</span><span class="p">]:</span>
+            <span class="n">slow</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">nums</span><span class="p">[</span><span class="n">slow</span><span class="p">]</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">fast</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">slow</span> <span class="o">+</span> <span class="mi">1</span>
+</code></pre>
+</div>
+<h4 id="identify">Identify</h4>
+<ol>
+<li>Input array is sorted</li>
+<li>Look for a pair of elements satisfying some relationships</li>
+<li>Need to compare elements from both ends</li>
+<li>Need to modify/filter array in-place (typically slow+fast pointers)</li>
+</ol>
+<h4 id="problems-2-pointers">Problems - 2 pointers</h4>
+<ul>
+<li>167 - Two Sum II - Input Array Is Sorted, <a href="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/">https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/</a> (Two Pointers)</li>
+<li>26 - Remove Duplicates from Sorted Array, <a href="https://leetcode.com/problems/remove-duplicates-from-sorted-array/">https://leetcode.com/problems/remove-duplicates-from-sorted-array/</a> (Two Pointers / In-place Array)</li>
+<li>344 - Reverse String, <a href="https://leetcode.com/problems/reverse-string/">https://leetcode.com/problems/reverse-string/</a> (Two Pointers)</li>
+<li>125 - Valid Palindrome, <a href="https://leetcode.com/problems/valid-palindrome/">https://leetcode.com/problems/valid-palindrome/</a> (Two Pointers)</li>
+<li>15 - 3Sum, <a href="https://leetcode.com/problems/3sum/">https://leetcode.com/problems/3sum/</a> (Sorting + Two Pointers)</li>
+<li>11 - Container With Most Water, <a href="https://leetcode.com/problems/container-with-most-water/">https://leetcode.com/problems/container-with-most-water/</a> (Two Pointers)</li>
+<li>88 - Merge Sorted Array, <a href="https://leetcode.com/problems/merge-sorted-array/">https://leetcode.com/problems/merge-sorted-array/</a> (Two Pointers)</li>
+<li>283 - Move Zeroes, <a href="https://leetcode.com/problems/move-zeroes/">https://leetcode.com/problems/move-zeroes/</a> (Two Pointers)</li>
+</ul>
+<h4 id="problems-fast-slow-pointers">Problems - Fast &amp; Slow Pointers</h4>
+<ul>
+<li>141 - Linked List Cycle, <a href="https://leetcode.com/problems/linked-list-cycle/">https://leetcode.com/problems/linked-list-cycle/</a> (Floyd's Cycle Detection)</li>
+<li>142 - Linked List Cycle II, <a href="https://leetcode.com/problems/linked-list-cycle-ii/">https://leetcode.com/problems/linked-list-cycle-ii/</a> (Floyd's Cycle Detection)</li>
+<li>876 - Middle of the Linked List, <a href="https://leetcode.com/problems/middle-of-the-linked-list/">https://leetcode.com/problems/middle-of-the-linked-list/</a> (Fast &amp; Slow Pointers)</li>
+<li>202 - Happy Number, <a href="https://leetcode.com/problems/happy-number/">https://leetcode.com/problems/happy-number/</a> (Cycle Detection)</li>
+<li>287 - Find the Duplicate Number, <a href="https://leetcode.com/problems/find-the-duplicate-number/">https://leetcode.com/problems/find-the-duplicate-number/</a> (Floyd's Cycle Detection)</li>
+<li>234 - Palindrome Linked List, <a href="https://leetcode.com/problems/palindrome-linked-list/">https://leetcode.com/problems/palindrome-linked-list/</a> (Fast/Slow Pointer + Reverse List)</li>
+<li>143 - Reorder List, <a href="https://leetcode.com/problems/reorder-list/">https://leetcode.com/problems/reorder-list/</a> (Fast/Slow Pointer + Reverse + Merge)</li>
+</ul>
+<h3 id="dfs">DFS</h3>
+<p>Uses stack or recursion</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># ITERATIVE</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c1"># process node</span>
+
+    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">neighbors</span><span class="p">:</span>
+        <span class="n">dfs</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+
+
+<span class="c1"># RECURSIVE</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span><span class="p">]</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>DFS - grid</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">out_of_bounds</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">visited</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]:</span>
+        <span class="k">return</span>
+
+    <span class="n">visited</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">dfs</span><span class="p">(</span><span class="n">row</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+    <span class="n">dfs</span><span class="p">(</span><span class="n">row</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span>
+    <span class="n">dfs</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">dfs</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre>
+</div>
+<h4 id="identification">Identification</h4>
+<ol>
+<li>Explore all paths (dfs + backtracking)
+<ol>
+<li>Generate combinations, permutations, subsets</li>
+<li>Word search</li>
+</ol></li>
+<li>Trees where need to explore subtrees
+<ol>
+<li>Eg - Find max depth of a binary tree</li>
+</ol></li>
+</ol>
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">maxDepth</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="n">maxDepth</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">left</span><span class="p">),</span>
+        <span class="n">maxDepth</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+<p>Connected components</p>
+<ul>
+<li>How many islands are there</li>
+<li>Mark all cells connected to this cell</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">r</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="n">c</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">c</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">or</span>
+        <span class="n">grid</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"1"</span>
+    <span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">grid</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"0"</span>
+
+    <span class="n">dfs</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">dfs</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">r</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">dfs</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">dfs</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre>
+</div>
+<h4 id="problems">Problems</h4>
+<ul>
+<li>200 - Number of Islands, <a href="https://leetcode.com/problems/number-of-islands/">https://leetcode.com/problems/number-of-islands/</a> (DFS / BFS on Grid)</li>
+<li>733 - Flood Fill, <a href="https://leetcode.com/problems/flood-fill/">https://leetcode.com/problems/flood-fill/</a> (DFS / BFS on Grid)</li>
+<li>133 - Clone Graph, <a href="https://leetcode.com/problems/clone-graph/">https://leetcode.com/problems/clone-graph/</a> (DFS / BFS + HashMap)</li>
+<li>104 - Maximum Depth of Binary Tree, <a href="https://leetcode.com/problems/maximum-depth-of-binary-tree/">https://leetcode.com/problems/maximum-depth-of-binary-tree/</a> (Tree DFS)</li>
+<li>257 - Binary Tree Paths, <a href="https://leetcode.com/problems/binary-tree-paths/">https://leetcode.com/problems/binary-tree-paths/</a> (Tree DFS + Backtracking)</li>
+<li>261 - Graph Valid Tree, <a href="https://leetcode.com/problems/graph-valid-tree/">https://leetcode.com/problems/graph-valid-tree/</a> (DFS / BFS / Union Find)</li>
+<li>112 - Path Sum, <a href="https://leetcode.com/problems/path-sum/">https://leetcode.com/problems/path-sum/</a> (Tree DFS)</li>
+<li>721 - Accounts Merge, <a href="https://leetcode.com/problems/accounts-merge/">https://leetcode.com/problems/accounts-merge/</a> (DFS / Union Find)</li>
+<li>417 - Pacific Atlantic Water Flow, <a href="https://leetcode.com/problems/pacific-atlantic-water-flow/">https://leetcode.com/problems/pacific-atlantic-water-flow/</a> (Matrix DFS / BFS)</li>
+</ul>
+<h3 id="bfs">BFS</h3>
+<p>Uses a queue</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">deque</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">bfs</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">start</span><span class="p">])</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="p">{</span><span class="n">start</span><span class="p">}</span>
+
+    <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+
+        <span class="c1"># process node</span>
+
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">[</span><span class="n">node</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">neighbor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+                <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neighbor</span><span class="p">)</span>
+</code></pre>
+</div>
+<h4 id="identification-2">Identification</h4>
+<ul>
+<li>Reach a node using minimum number of edges
+<ul>
+<li>Minimum moves from A to B</li>
+</ul></li>
+<li>Shortest path in an unweighted graph
+<ul>
+<li>Shortest path, nearest cell, fewest moves, distance from source</li>
+</ul></li>
+<li>Level order transversal
+<ul>
+<li>Return nodes level by level</li>
+</ul></li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">deque</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">level_order</span><span class="p">(</span><span class="n">root</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">([</span><span class="n">root</span><span class="p">])</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">while</span> <span class="n">queue</span><span class="p">:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">queue</span><span class="p">)):</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="n">level</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">:</span>
+                <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
+                <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+</code></pre>
+</div>
+<h3 id="prefix-sum">Prefix Sum</h3>
+<ul>
+<li>Precompute cumulative sums so that a range sum can be calculated in O(1).</li>
+<li>Convert a contiguous subarray problem into a difference between two prefix states.</li>
+</ul>
+<p>Prefix sum + hashmap is a common combination</p>
+<p>BASIC</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">prefix_sum</span><span class="p">(</span><span class="n">nums</span><span class="p">):</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)):</span>
+        <span class="n">prefix</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">prefix</span>
+
+
+<span class="n">nums</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix_sum</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span>
+
+<span class="c1"># Sum of nums[1:4] → 4 + 1 + 5</span>
+<span class="n">left</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">right</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">prefix</span><span class="p">[</span><span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">prefix</span><span class="p">[</span><span class="n">left</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>  <span class="c1"># 10</span>
+</code></pre>
+</div>
+<p>WITH HASHMAP</p>
+<div class="codehilite">
+<pre><span></span><code><span class="err">`</span><span class="n">count</span> <span class="o">+=</span> <span class="n">seen</span><span class="p">[</span><span class="n">prefix</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span><span class="err">`</span>
+</code></pre>
+</div>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">subarray_sum</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">seen</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">seen</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">+=</span> <span class="n">num</span>
+
+        <span class="c1"># Have we seen a prefix that makes the</span>
+        <span class="c1"># current subarray sum equal to k?</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="n">seen</span><span class="p">[</span><span class="n">prefix</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span>
+
+        <span class="n">seen</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">count</span>
+
+
+<span class="n">nums</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">subarray_sum</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+</code></pre>
+</div>
+<h4 id="identification-3">Identification</h4>
+<p>Look for problems involving repeated sums over contiguous ranges.</p>
+<ul>
+<li>Contiguous subarray and Sum/property of subarray?
+<ul>
+<li>Think Prefix Sum</li>
+</ul></li>
+<li>Also need to count/find matching subarrays?
+<ul>
+<li>Prefix Sum + HashMap</li>
+</ul></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Problem clue</th>
+<th>Think</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Range sum queries</td>
+<td>Prefix Sum</td>
+</tr>
+<tr>
+<td>Sum of <code>l..r</code>|Prefix Sum</td>
+</tr>
+<tr>
+<td>Repeated contiguous sums</td>
+<td>Prefix Sum</td>
+</tr>
+<tr>
+<td>Subarray sum = K</td>
+<td>Prefix Sum + HashMap</td>
+</tr>
+<tr>
+<td>Count subarrays with condition</td>
+<td>Prefix Sum + HashMap</td>
+</tr>
+<tr>
+<td>Equal 0s and 1s</td>
+<td>Prefix Sum</td>
+</tr>
+<tr>
+<td>Balance between two values</td>
+<td>Prefix Sum</td>
+</tr>
+<tr>
+<td>2D rectangular sum</td>
+<td>2D Prefix Sum</td>
+</tr>
+<tr>
+<td>Positive numbers + target window</td>
+<td>Often Sliding Window</td>
+</tr>
+</tbody>
+</table>
+<p>Most important - Subarray Sum = K</p>
+<p>Eg - Number of subarrays whose sum equals 3</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">subarray_sum</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">frequencies</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">+=</span> <span class="n">num</span>
+
+        <span class="n">count</span> <span class="o">+=</span> <span class="n">frequencies</span><span class="p">[</span><span class="n">prefix</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span>
+
+        <span class="n">frequencies</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">count</span>
+</code></pre>
+</div>
+<p>Words like:</p>
+<ul>
+<li>subarray</li>
+<li>range sum</li>
+<li>sum between <code>i</code> and <code>j</code></li>
+<li>contiguous</li>
+<li>cumulative</li>
+<li>running sum</li>
+<li>sum equals <code>k</code></li>
+<li>number of subarrays</li>
+<li>balance</li>
+<li>frequency/count within a range</li>
+</ul>
+<h4 id="problems-2">Problems</h4>
+<ul>
+<li>560 - Subarray Sum Equals K, <a href="https://leetcode.com/problems/subarray-sum-equals-k/">https://leetcode.com/problems/subarray-sum-equals-k/</a> (Prefix Sum + HashMap)</li>
+<li>974 - Subarray Sums Divisible by K, <a href="https://leetcode.com/problems/subarray-sums-divisible-by-k/">https://leetcode.com/problems/subarray-sums-divisible-by-k/</a> (Prefix Sum + Modulo HashMap)</li>
+<li>930 - Binary Subarrays With Sum, <a href="https://leetcode.com/problems/binary-subarrays-with-sum/">https://leetcode.com/problems/binary-subarrays-with-sum/</a> (Prefix Sum / Sliding Window)</li>
+<li>1248 - Count Number of Nice Subarrays, <a href="https://leetcode.com/problems/count-number-of-nice-subarrays/">https://leetcode.com/problems/count-number-of-nice-subarrays/</a> (Prefix Sum + Counting)</li>
+<li>1074 - Number of Submatrices That Sum to Target, <a href="https://leetcode.com/problems/number-of-submatrices-that-sum-to-target/">https://leetcode.com/problems/number-of-submatrices-that-sum-to-target/</a> (2D Prefix Sum)</li>
+<li>363 - Max Sum of Rectangle No Larger Than K, <a href="https://leetcode.com/problems/max-sum-of-rectangle-no-larger-than-k/">https://leetcode.com/problems/max-sum-of-rectangle-no-larger-than-k/</a> (2D Prefix Sum + Binary Search)</li>
+<li>437 - Path Sum III, <a href="https://leetcode.com/problems/path-sum-iii/">https://leetcode.com/problems/path-sum-iii/</a> (Tree DFS + Prefix Sum)</li>
+<li>325 - Maximum Size Subarray Sum Equals k, <a href="https://leetcode.com/problems/maximum-size-subarray-sum-equals-k/">https://leetcode.com/problems/maximum-size-subarray-sum-equals-k/</a> (Prefix Sum + HashMap)</li>
+</ul>
+<h3 id="heap-priority-queue">Heap / Priority Queue</h3>
+<h4 id="problems-3">Problems</h4>
+<ul>
+<li>1046 - Last Stone Weight, <a href="https://leetcode.com/problems/last-stone-weight/">https://leetcode.com/problems/last-stone-weight/</a> (Heap / Priority Queue)</li>
+<li>347 - Top K Frequent Elements, <a href="https://leetcode.com/problems/top-k-frequent-elements/">https://leetcode.com/problems/top-k-frequent-elements/</a> (Heap / Bucket Sort)</li>
+<li>215 - Kth Largest Element in an Array, <a href="https://leetcode.com/problems/kth-largest-element-in-an-array/">https://leetcode.com/problems/kth-largest-element-in-an-array/</a> (Heap / Quickselect)</li>
+<li>23 - Merge K Sorted Lists, <a href="https://leetcode.com/problems/merge-k-sorted-lists/">https://leetcode.com/problems/merge-k-sorted-lists/</a> (Min Heap)</li>
+<li>621 - Task Scheduler, <a href="https://leetcode.com/problems/task-scheduler/">https://leetcode.com/problems/task-scheduler/</a> (Heap / Greedy)</li>
+<li>253 - Meeting Rooms II, <a href="https://leetcode.com/problems/meeting-rooms-ii/">https://leetcode.com/problems/meeting-rooms-ii/</a> (Min Heap / Intervals)</li>
+</ul>
+<h3 id="dynamic-programming">Dynamic Programming</h3>
+<h4 id="problems-4">Problems</h4>
+<ul>
+<li>70 - Climbing Stairs, <a href="https://leetcode.com/problems/climbing-stairs/">https://leetcode.com/problems/climbing-stairs/</a> (1D DP)</li>
+<li>198 - House Robber, <a href="https://leetcode.com/problems/house-robber/">https://leetcode.com/problems/house-robber/</a> (1D DP)</li>
+<li>5 - Longest Palindromic Substring, <a href="https://leetcode.com/problems/longest-palindromic-substring/">https://leetcode.com/problems/longest-palindromic-substring/</a> (String DP)</li>
+<li>1143 - Longest Common Subsequence, <a href="https://leetcode.com/problems/longest-common-subsequence/">https://leetcode.com/problems/longest-common-subsequence/</a> (2D DP)</li>
+<li>62 - Unique Paths, <a href="https://leetcode.com/problems/unique-paths/">https://leetcode.com/problems/unique-paths/</a> (Grid DP)</li>
+<li>322 - Coin Change, <a href="https://leetcode.com/problems/coin-change/">https://leetcode.com/problems/coin-change/</a> (Unbounded Knapsack DP)</li>
+</ul>
+<h3 id="binary-search">Binary Search</h3>
+<h4 id="problems-5">Problems</h4>
+<ul>
+<li>33 - Search in Rotated Sorted Array, <a href="https://leetcode.com/problems/search-in-rotated-sorted-array/">https://leetcode.com/problems/search-in-rotated-sorted-array/</a> (Modified Binary Search)</li>
+<li>153 - Find Minimum in Rotated Sorted Array, <a href="https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/">https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/</a> (Modified Binary Search)</li>
+<li>34 - Find First and Last Position of Element in Sorted Array, <a href="https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/">https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/</a> (Binary Search Boundaries)</li>
+<li>875 - Koko Eating Bananas, <a href="https://leetcode.com/problems/koko-eating-bananas/">https://leetcode.com/problems/koko-eating-bananas/</a> (Binary Search on Answer)</li>
+<li>1011 - Capacity To Ship Packages Within D Days, <a href="https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/">https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/</a> (Binary Search on Answer)</li>
+<li>1482 - Minimum Number of Days to Make m Bouquets, <a href="https://leetcode.com/problems/minimum-number-of-days-to-make-m-bouquets/">https://leetcode.com/problems/minimum-number-of-days-to-make-m-bouquets/</a> (Binary Search on Answer)</li>
+<li>74 - Search a 2D Matrix, <a href="https://leetcode.com/problems/search-a-2d-matrix/">https://leetcode.com/problems/search-a-2d-matrix/</a> (Binary Search)</li>
+</ul>
+<h2 id="misc">Misc</h2>
+<h3 id="dfs-vs-bfs">DFS vs BFS</h3>
+<ul>
+<li>DFS - find all possibilities, explore all possibilities</li>
+<li>BFS - find optimal (shortest path)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>DFS</th>
+<th>BFS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Explore deeply</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>Explore level-by-level</td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Shortest path, unweighted</td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Connected components</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Number of islands</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Tree traversal</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Generate permutations</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>Generate subsets</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>Backtracking</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>Minimum moves</td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Nearest/closest node</td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Level order</td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Path existence</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>These are symptoms of BFS/DFS:</p>
+<pre><code>Tree
+Graph
+Grid
+Island
+Connected
+Path
+Reachable
+Neighbors
+</code></pre>
+<p>Then choose an algo:</p>
+<pre><code>All possibilities?       → DFS / Backtracking
+Connected component?     → DFS or BFS
+Shortest path?           → BFS
+Minimum moves?           → BFS
+Level by level?          → BFS
+Deep subtree computation → DFS
+</code></pre>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            2024 words &middot; 10m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-09.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">10m read</span>
+                <a href="python-leetcode.html">python - leetcode</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">12m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 09 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>
