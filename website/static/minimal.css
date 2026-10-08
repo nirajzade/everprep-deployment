@@ -344,15 +344,16 @@ table.data tfoot td {
     left: 1rem;
     transform: translateY(-50%);
     margin: 0;
-    padding: 0 0.5rem;
-    background: var(--bg);
+    padding: 0.15rem 0.55rem;
+    border: 1px solid var(--muted);
+    background: var(--muted);
     font-family: var(--font-mono);
     font-size: 0.72em;
     font-weight: 600;
     letter-spacing: 0.12em;
     line-height: 1.4;
     text-transform: uppercase;
-    color: var(--fg);
+    color: var(--bg);
 }
 
 .box > .box-title + .list-group {
@@ -375,7 +376,6 @@ table.data tfoot td {
 
     .box > .box-title {
         left: 0;
-        padding-left: 0;
     }
 
     /* index page keeps full borders, for legibility */
@@ -386,7 +386,6 @@ table.data tfoot td {
 
     .home .box > .box-title {
         left: 0.6rem;
-        padding: 0 0.4rem;
     }
 }
 
