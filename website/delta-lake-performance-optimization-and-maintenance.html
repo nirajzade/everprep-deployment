@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Delta Lake - performance optimization and maintenance - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>Delta Lake - performance optimization and maintenance</h1>
+        <p class="meta">13m read &middot; 2657 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#work-in-progress">WORK IN PROGRESS ========</a></li>
+    <li><a href="#core-factors-affecting-performance">Core factors affecting performance</a>
+<ul>
+    <li><a href="#when-files-are-too-large">When files are too large</a></li>
+    <li><a href="#when-files-are-too-small-wip">When files are too small - wip</a></li>
+</ul></li>
+    <li><a href="#gist">Gist</a></li>
+    <li><a href="#liquid-clustering-faster-reads-via-data-skipping">Liquid clustering - Faster reads via data skipping</a>
+<ul>
+    <li><a href="#when-is-liquid-clustering-triggered">When is liquid clustering triggered?</a></li>
+    <li><a href="#what-happens-during-liquid-clustering">What happens during liquid-clustering?</a></li>
+    <li><a href="#automated-liquid-clustering">Automated liquid clustering</a></li>
+    <li><a href="#creating-modifying-tables-for-liquid-clustering">Creating/modifying tables for liquid clustering</a></li>
+    <li><a href="#how-to-choose-columns-to-cluster-on">How to choose columns to cluster on</a></li>
+    <li><a href="#create-new-table-with-liquid-clustering">Create new table with liquid clustering</a></li>
+    <li><a href="#enable-liquid-clustering-on-existing-table">Enable liquid clustering on existing table</a></li>
+    <li><a href="#change-liquid-clustering-columns">Change liquid-clustering columns</a></li>
+</ul></li>
+    <li><a href="#auto-compaction-control-file-size">Auto-compaction - Control file size</a>
+<ul>
+    <li><a href="#enabling-auto-compaction">Enabling auto compaction</a></li>
+    <li><a href="#auto-tuning">Auto tuning</a></li>
+    <li><a href="#write-heavy-tables">Write heavy tables</a></li>
+    <li><a href="#estimating-number-of-files">Estimating number of files</a></li>
+    <li><a href="#enable-background-auto-compaction">Enable background auto compaction</a></li>
+</ul></li>
+    <li><a href="#automating-table-maintenance-databricks-only">Automating table maintenance (Databricks only)</a>
+<ul>
+    <li><a href="#predictive-optimization">Predictive optimization</a></li>
+</ul></li>
+    <li><a href="#manual-intervention">Manual intervention</a></li>
+    <li><a href="#optimize-data-layout-optimization">OPTIMIZE - data layout optimization</a></li>
+    <li><a href="#auto-optimization-wip-where-to-put-this-in-this-note">Auto-optimization - wip - WHERE TO PUT THIS IN THIS NOTE?</a></li>
+    <li><a href="#z-order-faster-reads-by-data-skipping">Z-ORDER - faster reads by data-skipping</a>
+<ul>
+    <li><a href="#zorder-vs-bucketing">Zorder vs bucketing</a></li>
+</ul></li>
+    <li><a href="#partitioning-wip">Partitioning - WIP</a></li>
+    <li><a href="#vacuum-removing-stale-files-by-trimming-history">VACUUM - Removing stale files by trimming history</a></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<h1 id="work-in-progress">WORK IN PROGRESS ========</h1>
+<blockquote>
+<p>Work in progress - The overall flow of this note is being fixed</p>
+</blockquote>
+<p><em>If you're a new architect, or simply someone new to Databricks/Delta-Lake, you'll want to go through this note a few times. At each time, think how your existing data setup can be improved through things explained in this note.</em></p>
+<p>There is plenty of official documentation on the topic. But this note organizes it all in one place, and forms a definite &amp; actionable structure in your brain.</p>
+<h1 id="core-factors-affecting-performance">Core factors affecting performance</h1>
+<p>In file-based table stores like delta lake, performance tuning boils down to 2 factors:</p>
+<p><strong>Data organization for fast row pinpointing</strong></p>
+<p>When querying a table, the engine should be able to point out where the relevant rows of data are. As fast as possible.</p>
+<p><strong>File sizes</strong></p>
+<p>Spark works on a task per file model. This is the root cause of the problem. This model brings restrictions on file sizes.</p>
+<h3 id="when-files-are-too-large">When files are too large</h3>
+<p><strong>Write explosion</strong></p>
+<p>Suppose there is a 10gb parquet file with 10 million rows.<br/>
+Now, suppose a transaction updates 50k rows.<br/>
+Parquet files are immutable, so for this update, a new parquet file of 10gb will be written, containing those 50k rows udpated rows. So, a simple update of 50k rows triggered a 10gb file write.</p>
+<p>This would have been smaller in size, say 1gb.</p>
+<p>Note: even though it is said that spark follows task per file model, a file can generate more than one task.<br/>
+Eg : If the file size is 10gb, the entire 10gb file won't be processed as a single task.<br/>
+Spark will split it into multiple tasks based on:</p>
+<ul>
+<li><code>spark.sql.files.maxPartitionBytes</code> - defaults to 128mb, leading to 80 tasks of 128mb each</li>
+<li>row group sizes - spark cannot split the parquet files arbitrarity. It will split the parquet file at its row group boundaries. So, row group is a major factor. If <code>maxPartitionBytes</code> is 128mb, but row group size is 256mb, spark will split the 10gb file into 40 tasks of 256mb each.</li>
+</ul>
+<h2 id="when-files-are-too-small-wip">When files are too small - wip</h2>
+<p>Files should not be too small.</p>
+<p>If individual files are too small, the we will end up with millions of files representing a table. </p>
+<p>Spark will end up generating a task for every file, leading to millions of tiny jobs. This will waste resources and increase processing time.</p>
+<ul>
+<li>Files should not be too large: Too large files will lead to lower number of tasks, and thus lower parallelism - leading to core wastage in the cluster. Large files will also lead to much worse data skipping (as the min-max range per file will be extremely wide), increasing the amount of data scanned by queries.</li>
+</ul>
+<p>In delta lake - organizing data for fast discovery is done through either partitioning+z-ordering or liquid clustering, and file sizes are optimized through compaction.</p>
+<h1 id="gist">Gist</h1>
+<p>Things you should know in 1 line:</p>
+<ul>
+<li><strong>Auto compaction</strong> : solves small file problem by merging small files into fewer larger files, reducing file count overhead</li>
+<li><strong>ZORDER</strong> : re-writes data by sorting rows along space-filling curve, allowing multi-column filters to skip more files</li>
+<li><strong>Liquid clustering</strong> : Replaces zorder. The ONLY good fit for workloads that stream data into delta tables. Continuously and incrementally groups rows with similar key values into same files, improving file-level data skipping.</li>
+<li><strong>Partitioning</strong> : splits and organizes data into directory based chunks, enabling coarser data pruning before files are scanned (single column filter statements)</li>
+<li><strong>OPTIMIZE</strong> : Executes a family of optimization operations that rewrite data files to improve read performance - file compaction and z-ordering or liquid clustering (whatever is enabled)</li>
+</ul>
+<p>On a delta table, you can either use (Liquid Clustering), or (z-ordering+partitioning). Liquid clustering isn't compatible with partitioning and z-ordering.</p>
+<p>Liquid clustering and auto compaction are two different mechanisms, independent of each other. However, they are co-executed inside the same spark write jobs. So in a way, these two work hand-in-hand.</p>
+<ul>
+<li>Operationally
+<ul>
+<li>Automated management will automatically trigger liquid clustering and auto compaction (via <code>OPTIMIZE</code>)</li>
+<li>If automated management is not available/enabled, periodically run <code>OPTIMIZE</code> via scheduled job runs</li>
+</ul></li>
+<li>Tech choices
+<ul>
+<li>To prevent small file problem - Enable delta auto-compaction if not already enabled</li>
+<li>To make sure the files are organized well - prefer liquid clustering over zorder+partitioning</li>
+</ul></li>
+</ul>
+<h1 id="liquid-clustering-faster-reads-via-data-skipping">Liquid clustering - Faster reads via data skipping</h1>
+<blockquote>
+<p>NOTE: Prefer using liquid clustering instead of the older hive-partitioning &amp; Z-ORDER mechanisms</p>
+<p>Liquid clustering cannot be used with partitioning and bucketing. You have to give up all control to liquid clustering.</p>
+</blockquote>
+<p>Preferred for tables that are being loaded by streaming, or by small frequently run batches of appends.<br/>
+Liquid clustering especially shines when read patterns are not predictable.</p>
+<p>Liquid clustering optimizes the data layout, aiming for a balanced data layout - uniform file size, and an appropriate number of files depending on the size of the table. It will take care of cardinality, data skew and small file problem.</p>
+<p>Use for:</p>
+<ul>
+<li>skewed data</li>
+<li>tables that regularly ingest new data (streaming data, frequent batch insertions)</li>
+<li>query patterns are constantly changing with time</li>
+<li>partitioning leads to smile file problem</li>
+</ul>
+<p><strong>Liquid clustering comes in 2 flavours</strong>:</p>
+<ul>
+<li><strong>Automated liquid clustering</strong> (databricks only feature, part of Predictive Optimization) - the runtime will automatically choose columns to cluster on based on history of queries executed on the table. This is very similar to <a href="https://docs.snowflake.com/en/user-guide/tables-auto-reclustering">Snowflake's automated re-clustering</a>.</li>
+<li><strong>Non-automated liquid clustering</strong> - you'll have to specify the columns to cluster on</li>
+</ul>
+<h2 id="when-is-liquid-clustering-triggered">When is liquid clustering triggered?</h2>
+<p><strong>TRIGGER ON WRITE</strong></p>
+<p>Liquid clustering happens at write-time. Every time delta writes writes to a table, liquid clustering is performed on it (INSERT, MERGE, COPY INTO etc). So, all liquid clustering work happens inside the spark jobs that are touching the table. There is no separate background service that continuously optimizes the tables.</p>
+<p><strong>MANUAL/EXPLICIT TRIGGER</strong></p>
+<p>Liquid clustering can be manually triggered via the optimize command</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">delta.tables</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+    <span class="n">deltaTable</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="s2">"path/to/table"</span><span class="p">)</span>
+    <span class="n">deltaTable</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span><span class="o">.</span><span class="n">executeCompaction</span><span class="p">()</span>
+</code></pre>
+</div>
+<div class="codehilite">
+<pre><span></span><code><span class="n">OPTIMIZE</span><span class="w"> </span><span class="k">table_name</span><span class="p">;</span>
+</code></pre>
+</div>
+<p><strong>AUTOMATED TRIGGER (databricks only)</strong></p>
+<p>When predictive optimization is enabled (requires databricks premium plan), databricks will automatically run ANALYZE, OPTIMIZE, VACUUM operations - by queueing them as job to be run on serverless compute instances.</p>
+<p>Since OPTIMIZE is being run, it will also end up triggering liquid clustering.</p>
+<h2 id="what-happens-during-liquid-clustering">What happens during liquid-clustering?</h2>
+<ol>
+<li>Delta reads clustering metadata - looks at existing files, their min/max ranges on clustering keys, clustering quality scores</li>
+<li>Incoming rows are sorted and grouped by the clustering keys.</li>
+<li>Delta will append rows into files whose key ranges are a good match for that particular row. If there is no existing file with a good match, it will create new file with tight range.</li>
+</ol>
+<p>There is no global-sort. No full table scan (only file statistics are read). The computational cost is proportional only to the new data.</p>
+<p>If liquid clustering finds that the existing data is horribly clustered, it won't re-organize and re-write the whole table. Instead, it will only rewrite a few of the worst files. If it sees diminishing returns, it will stop early.</p>
+<p>Why? because it doesn't want to break streaming SLAs. Re-organizing the entire table may take a long time, breaking the SLA. So instead, it will fix only a few existing files on every run. Over time, as more and more writes trigger liquid clustering, the table will eventually become well-clustered.</p>
+<p>So, in short, liquid clustering will touch a few files on every run, keeping the rewrite size small.</p>
+<h2 id="automated-liquid-clustering">Automated liquid clustering</h2>
+<p>(Databricks only feature)</p>
+<p>When automated liquid clustering is enabled, the runtime will analyze the historical query workload, and automatically identify the best columns for clustering. It will figure out the keys which will lead to cost savings from data skipping.<br/>
+In this case, the liquid clustering columns won't need to be manually declared.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="c1">-- Enable automatic liquid clustering on an existing table,</span>
+<span class="c1">-- including tables that previously had manually specified keys.</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">table1</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">AUTO</span><span class="p">;</span>
+
+<span class="c1">-- Disable automatic liquid clustering on an existing table.</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">table1</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">NONE</span><span class="p">;</span>
+
+<span class="c1">-- Disable automatic liquid clustering by setting the clustering keys</span>
+<span class="c1">-- to chosen clustering columns or new columns.</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">table1</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">column01</span><span class="p">,</span><span class="w"> </span><span class="n">column02</span><span class="p">);</span>
+</code></pre>
+</div>
+<p>Source: <a href="https://docs.databricks.com/aws/en/delta/clustering?language=SQL#enable-or-disable-automatic-liquid-clustering">Databricks: Delta Clustering: Enable/disable automatic liquid clustering</a></p>
+<p><strong>What triggers reclustering?</strong></p>
+<p>A re-clustering is triggered when:</p>
+<ul>
+<li>Files overlap on clustering keys</li>
+<li>There is fragmentation</li>
+<li>Query </li>
+</ul>
+<h2 id="creating-modifying-tables-for-liquid-clustering">Creating/modifying tables for liquid clustering</h2>
+<p>Liquid clustering can only be enabled on delta tables created with  CLUSTER BY clause.</p>
+<h2 id="how-to-choose-columns-to-cluster-on">How to choose columns to cluster on</h2>
+<p>Source - <a href="https://delta.io/blog/liquid-clustering/#how-to-choose-your-clustering-columns">delta.io: liquid-clustering</a></p>
+<p>Clustering can be done on multiple columns. Order of columns doesn't matter. Cardinality of the column doesn't matter.</p>
+<p>If existing tables are being migrated to liquid clustering based delta tables, choose liquid clustering columns as follows:</p>
+<ul>
+<li>Hive-style partitioning - use columns used for partitioning the data</li>
+<li>Z-order - use ZORDER BY columns</li>
+<li>Hive-style partitioning &amp; zorder - use columns used for partitioning the data and ZORDER BY columns</li>
+<li>Generated columns to reduce cardinality - use original column, don't create a generated column</li>
+</ul>
+<h2 id="create-new-table-with-liquid-clustering">Create new table with liquid clustering</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="p">(</span>
+    <span class="n">DeltaTable</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">tableName</span><span class="p">(</span><span class="s2">"sales"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">addColumn</span><span class="p">(</span><span class="s2">"customer"</span><span class="p">,</span> <span class="n">dataType</span> <span class="o">=</span> <span class="s2">"STRING"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">addColumn</span><span class="p">(</span><span class="s2">"city"</span><span class="p">,</span> <span class="n">dataType</span> <span class="o">=</span> <span class="s2">"STRING"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">addColumn</span><span class="p">(</span><span class="s2">"sales"</span><span class="p">,</span> <span class="n">dataType</span> <span class="o">=</span> <span class="s2">"INT"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">clusterBy</span><span class="p">(</span><span class="s2">"customer"</span><span class="p">,</span> <span class="s2">"city"</span><span class="p">)</span> <span class="c1"># enables liquid clustering</span>
+    <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<div class="codehilite">
+<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">table1</span><span class="p">(</span><span class="n">customer</span><span class="w"> </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">city</span><span class="w"> </span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">sales</span><span class="w"> </span><span class="nb">int</span><span class="p">)</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">DELTA</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">customer</span><span class="p">);</span>
+</code></pre>
+</div>
+<p>New table from existing table</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">sales_clustered</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">customer</span><span class="p">,</span><span class="w"> </span><span class="n">city</span><span class="p">)</span>
+<span class="k">AS</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">sales_raw</span><span class="p">;</span>
+</code></pre>
+</div>
+<h2 id="enable-liquid-clustering-on-existing-table">Enable liquid clustering on existing table</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">events</span>
+<span class="k">SET</span><span class="w"> </span><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">delta</span><span class="p">.</span><span class="n">liquid</span><span class="p">.</span><span class="n">clusteringKeys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'user_id, event_date'</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="change-liquid-clustering-columns">Change liquid-clustering columns</h2>
+<div class="codehilite">
+<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">table_name</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">new_column1</span><span class="p">,</span><span class="w"> </span><span class="n">new_column2</span><span class="p">);</span>
+</code></pre>
+</div>
+<p>Disable liquid clustering</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">table_name</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">NONE</span><span class="p">;</span>
+</code></pre>
+</div>
+<h1 id="auto-compaction-control-file-size">Auto-compaction - Control file size</h1>
+<p>Auto compaction kicks in when the number of file sizes is above a threshold (the spark configuration variable is <code>spark.databricks.delta.autoCompact.minNumFiles</code>). The output file size is controlled using <code>spark.databricks.delta.autoCompact.maxFileSize</code>.</p>
+<p>Like liquid clustering, <strong>auto compaction comes in 2 flavours</strong>:</p>
+<ul>
+<li><strong>Automated auto-compaction</strong> (Databricks only feature, part of Predictive Optimization) - the runtime will run OPTIMIZE, which will end up performing auto-compaction</li>
+<li><strong>Non-automated auto-compaction</strong> - auto compaction will have to be performed by manually running <code>OPTIMIZE</code> via a spark job, or a user.</li>
+</ul>
+<p>Auto compaction executes an <code>OPTIMIZE</code> command at the end of a transaction. Keep in mind that since <code>OPTIMIZE</code> is being run - if liquid clustering was enabled, then liquid clustering will also be performed on the table.</p>
+<hr/>
+<h2 id="enabling-auto-compaction">Enabling auto compaction</h2>
+<p>To enable auto compaction, following variables can be set:</p>
+<ul>
+<li>Table properties: <code>delta.autoOptimize.autoCompact</code></li>
+<li>Spark Session setting: <code>spark.databricks.delta.autoCompact.enabled</code></li>
+</ul>
+<p>The values these 2 settings take are:</p>
+<table>
+<thead>
+<tr>
+<th>Options</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>auto</code> (recommended)</td>
+<td>Tunes target file size while respecting other autotuning functionality. Requires Databricks Runtime 10.4 LTS or above.</td>
+</tr>
+<tr>
+<td><code>legacy</code></td>
+<td>Alias for <code>true</code>. Requires Databricks Runtime 10.4 LTS or above.</td>
+</tr>
+<tr>
+<td><code>true</code></td>
+<td>Use 128 MB as the target file size. No dynamic sizing.</td>
+</tr>
+<tr>
+<td><code>false</code></td>
+<td>Turns off auto compaction. Can be set at the session level to override auto compaction for all Delta tables modified in the workload.</td>
+</tr>
+</tbody>
+</table>
+<p>Source: <a href="https://docs.databricks.com/aws/en/delta/tune-file-size#auto-compaction-for-delta-lake-on-databricks">Databricks: Auto compaction for Delta Lake on Databricks</a></p>
+<h2 id="auto-tuning">Auto tuning</h2>
+<h2 id="write-heavy-tables">Write heavy tables</h2>
+<p>If the table is write-heavy and many MERGE  and DML operations are executed on it, set table property <code>delta.tuneFileSizesForRewrites</code> to <code>true</code>.</p>
+<p>When <code>true</code>, the target file size is set to a lower threshold, which makes write-intensive operations faster.</p>
+<p>If not set, databricks will detect if 9 of the last 10 ops were MERGE, and set the table property to <code>true</code>. To disable this behaviour, the value has to be explicitly set to <code>false</code>.</p>
+<h2 id="estimating-number-of-files">Estimating number of files</h2>
+<p>Databricks aims for smaller file sizes for smaller tables, and larger file sizes for larger tables. The aim it to make sure that the number of files doesn't increase too much.</p>
+<p>However, it won't set the file size dynamically if you've explicitly set target file size (delta table property <code>delta.targetFileSize</code>. Its default value is None).</p>
+<table>
+<thead>
+<tr>
+<th>Table size</th>
+<th>Target file size</th>
+<th>Approximate number of files in table</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10 GB</td>
+<td>256 MB</td>
+<td>40</td>
+</tr>
+<tr>
+<td>1 TB</td>
+<td>256 MB</td>
+<td>4096</td>
+</tr>
+<tr>
+<td>2.56 TB</td>
+<td>256 MB</td>
+<td>10240</td>
+</tr>
+<tr>
+<td>3 TB</td>
+<td>307 MB</td>
+<td>12108</td>
+</tr>
+<tr>
+<td>5 TB</td>
+<td>512 MB</td>
+<td>17339</td>
+</tr>
+<tr>
+<td>7 TB</td>
+<td>716 MB</td>
+<td>20784</td>
+</tr>
+<tr>
+<td>10 TB</td>
+<td>1 GB</td>
+<td>24437</td>
+</tr>
+<tr>
+<td>20 TB</td>
+<td>1 GB</td>
+<td>34437</td>
+</tr>
+<tr>
+<td>50 TB</td>
+<td>1 GB</td>
+<td>64437</td>
+</tr>
+<tr>
+<td>100 TB</td>
+<td>1 GB</td>
+<td>114437</td>
+</tr>
+</tbody>
+</table>
+<h2 id="enable-background-auto-compaction">Enable background auto compaction</h2>
+<p>This is a 2 step process:</p>
+<ul>
+<li>remove spark config <code>spark.databricks.delta.autoCompact.enabled</code> from cluster/notebook settings</li>
+<li>for each table, run <code>ALTER TABLE &lt;table_name&gt; UNSET TBLPROPERTIES (delta.autoOptimize.autoCompact)</code>. This will remove legacy auto-compaction settings.</li>
+</ul>
+<p>After removing these, auto compaction will be triggered automatically (for all unity catalogue managed tables)</p>
+<h1 id="automating-table-maintenance-databricks-only">Automating table maintenance (Databricks only)</h1>
+<h2 id="predictive-optimization">Predictive optimization</h2>
+<p>This is a feature available for Unity Catalog managed tables.</p>
+<p>When predictive optimization is enabled (requires databricks premium plan), databricks will automatically run ANALYZE, OPTIMIZE, VACUUM operations - by queueing them as job to be run on serverless compute (you will be billed for this compute).</p>
+<p>Since OPTMIZE is being run, it will end up triggering both liquid clustering and auto-compaction on tables.</p>
+<blockquote>
+<p>Observability statistics for predictive optimization executions are stored in the table <code>system.storage.predictive_optimization_operations_history</code>.</p>
+</blockquote>
+<p>To explicitly enable/disable predictive optimization on a table:</p>
+<pre><code>ALTER CATALOG [catalog_name] { ENABLE | DISABLE | INHERIT } PREDICTIVE OPTIMIZATION;
+ALTER { SCHEMA | DATABASE } schema_name { ENABLE | DISABLE | INHERIT } PREDICTIVE OPTIMIZATION;
+</code></pre>
+<h1 id="manual-intervention">Manual intervention</h1>
+<p>Rough bullet points</p>
+<ul>
+<li>Aim for 128mb-1gb per file</li>
+</ul>
+<p>Liquid clustering</p>
+<p>Small file problem</p>
+<h1 id="optimize-data-layout-optimization">OPTIMIZE - data layout optimization</h1>
+<p>Source - <a href="https://docs.databricks.com/aws/en/sql/language-manual/delta-optimize">Databricks: Delta Optimize</a></p>
+<p>Will perform bin-packing and z-ordering.</p>
+<p>Merges small files into larger ones. Good for read heavy tables.</p>
+<h1 id="auto-optimization-wip-where-to-put-this-in-this-note">Auto-optimization - wip - WHERE TO PUT THIS IN THIS NOTE?</h1>
+<p>The term has been split into 2:</p>
+<ul>
+<li>https://docs.databricks.com/aws/en/delta/tune-file-size#optimized-writes</li>
+<li>https://docs.databricks.com/aws/en/delta/tune-file-size#auto-compact</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">delta</span><span class="p">.</span><span class="n">autoOptimize</span><span class="p">.</span><span class="n">optimizeWrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>
+<span class="w">  </span><span class="n">delta</span><span class="p">.</span><span class="n">autoOptimize</span><span class="p">.</span><span class="n">autoCompact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h1 id="z-order-faster-reads-by-data-skipping">Z-ORDER - faster reads by data-skipping</h1>
+<blockquote>
+<p>NOTE: As of now (2025), liquid clustering is recommended over Z-ORDERING.</p>
+</blockquote>
+<blockquote>
+<p>WARNING:</p>
+<p>Very costly operation to perform. Z-order will lead to re-write amplification. Every <code>OPTIMIZE ZORDER</code> will rewrite large chunks of data.</p>
+</blockquote>
+<ul>
+<li>Improves file-level data skipping when queries are filtering on multiple columns</li>
+<li>While writing  - writes rows with similar values close together, and stores min/max stats per file</li>
+</ul>
+<p>Now, spark can skip entire files by looking at the min/max stats. Very effective for range and equality filters</p>
+<p>Z-ORDER has to be triggered manually (in pipelines or scheduled jobs).<br/>
+So, use Z-ORDER only for legacy tables, and one-off historical backfills.</p>
+<p>By default, simply prefer liquid clustering.</p>
+<p>To run z-order:</p>
+<div class="codehilite">
+<pre><span></span><code><span class="n">OPTIMIZE</span><span class="w"> </span><span class="n">orders</span>
+<span class="n">ZORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">customer_id</span><span class="p">,</span><span class="w"> </span><span class="n">order_date</span><span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="zorder-vs-bucketing">Zorder vs bucketing</h2>
+<p>Bucketing is not supported for delta tables.</p>
+<p>Similar to partitioning+bucketing for parquet tables, partitioning+z-ordering is the way to go for delta tables.</p>
+<p>However, it is still recommended to simply use liquid clustering instead of partitioning+z-ordering.</p>
+<p>Zorder and bucketing solve completely different problems.<br/>
+Zorder will help speed up writes through data-skipping. Bucketing will help speed up execution by preventing shuffles during joins and aggregations.</p>
+<p>Z-order doesn't prevent the data-shuffle problem that bucketing does.</p>
+<h1 id="partitioning-wip">Partitioning - WIP</h1>
+<p>If liquid clustering is not available, Partitioning + Z-ORDER  is the way to go, for enabling faster reads via file-skipping.</p>
+<p>Also naturally, partitioning won't work only if there are no low-cardinality columns that are being used by queries to filter data. This almost never happens in practice, so partitioning the table is almost always the go-to strategy.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">events</span>
+<span class="n">PARTITIONED</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">event_date</span><span class="p">)</span>
+</code></pre>
+</div>
+<h1 id="vacuum-removing-stale-files-by-trimming-history">VACUUM - Removing stale files by trimming history</h1>
+<p>VACUUM will:</p>
+<ul>
+<li>Trim data history by deleting snapshot files that are older than the specified time travel retention period.</li>
+<li>Physically delete dropped rows (that were soft-deleted via deletion vectors)</li>
+</ul>
+<p>It is never run automatically. It will always have to be manually executed by a job or a user.</p>
+<p>Delete old data files (loses history)</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">VACUUM</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="n">RETAIN</span><span class="w"> </span><span class="mi">168</span><span class="w"> </span><span class="n">HOURS</span>
+</code></pre>
+</div>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            2657 words &middot; 13m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-09.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">13m read</span>
+                <a href="delta-lake-performance-optimization-and-maintenance.html">Delta Lake - performance optimization and maintenance</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="python-leetcode.html">python - leetcode</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">12m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 09 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>

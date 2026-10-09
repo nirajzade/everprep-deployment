@@ -34,7 +34,7 @@
 
     <header>
         <h1>spark - theory</h1>
-        <p class="meta">12m read &middot; 2461 words</p>
+        <p class="meta">12m read &middot; 2478 words</p>
     </header>
 
     
@@ -48,7 +48,6 @@
     <li><a href="#todo-5-stages-of-generation">todo - 5 stages of generation</a></li>
     <li><a href="#mergeschema-vs-overwriteschema">MergeSchema vs OverwriteSchema</a></li>
     <li><a href="#checkpointing">Checkpointing</a></li>
-    <li><a href="#todo-role-of-gc">TODO: Role of gc</a></li>
     <li><a href="#udf">UDF</a></li>
     <li><a href="#reducebykey-vs-groupbykey">reduceByKey vs groupByKey</a></li>
 </ul></li>
@@ -57,10 +56,10 @@
     <li><a href="#schema-evolution">Schema evolution</a></li>
     <li><a href="#optimization">Optimization</a>
 <ul>
-    <li><a href="#liquid-clustering">Liquid clustering</a></li>
     <li><a href="#partition-zorder">partition+zorder</a></li>
 </ul></li>
 </ul></li>
+    <li><a href="#target-file-sizes">Target file sizes</a></li>
     <li><a href="#optimization-2">Optimization</a>
 <ul>
     <li><a href="#aqe">AQE</a>
@@ -191,7 +190,6 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>Lineage truncation - delete logical plan that led upto that dataframe</li>
 <li>Reference update - future operation on df will point directly to files on disk, ignoring original files and transformations</li>
 </ul>
-<h2 id="todo-role-of-gc">TODO: Role of gc</h2>
 <h2 id="udf">UDF</h2>
 <p>Why are UDFs slow? because of the serialization bottleneck</p>
 <p>Moving data between jvm (spark) and python is very expensive</p>
@@ -266,39 +264,6 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>z-order - colocates related value, to improve data skipping and joins</li>
 </ul>
 <p>Optimize data layout using <code>OPTIMIZE</code> and liquid clustering.</p>
-<h3 id="liquid-clustering">Liquid clustering</h3>
-<ul>
-<li>Replaces partitioning and bucketing.</li>
-<li>Doesn't replace OPTIMIZE</li>
-</ul>
-<p>Continuously re-organizes data around clustering columns.</p>
-<p>Use when data has high cardinality (so partitioning can't be used)</p>
-<table>
-<thead>
-<tr>
-<th>Older approach</th>
-<th>Liquid clustering</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Static partitioning</td>
-<td>Dynamic clustering</td>
-</tr>
-<tr>
-<td>Z-Ordering</td>
-<td>Dynamic clustering</td>
-</tr>
-<tr>
-<td>Need to choose partitions upfront</td>
-<td>Can change clustering columns</td>
-</tr>
-<tr>
-<td>Risk of too many/small partitions</td>
-<td>Avoids rigid directory partitioning</td>
-</tr>
-</tbody>
-</table>
 <h3 id="partition-zorder">partition+zorder</h3>
 <p>Use when </p>
 <ul>
@@ -362,6 +327,70 @@ Persist caches the computed data but keeps the lineage.</p>
 <tr>
 <td><code>VOID</code></td>
 <td>Any type</td>
+</tr>
+</tbody>
+</table>
+<h1 id="target-file-sizes">Target file sizes</h1>
+<p>Spark aims for 128mb rowgroups.</p>
+<p>Delta lake's target parquet file size are:</p>
+<table>
+<thead>
+<tr>
+<th>Table size</th>
+<th>Target file size</th>
+<th>Approximate number of files in table</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10 GB</td>
+<td>256 MB</td>
+<td>40</td>
+</tr>
+<tr>
+<td>1 TB</td>
+<td>256 MB</td>
+<td>4096</td>
+</tr>
+<tr>
+<td>2.56 TB</td>
+<td>256 MB</td>
+<td>10240</td>
+</tr>
+<tr>
+<td>3 TB</td>
+<td>307 MB</td>
+<td>12108</td>
+</tr>
+<tr>
+<td>5 TB</td>
+<td>512 MB</td>
+<td>17339</td>
+</tr>
+<tr>
+<td>7 TB</td>
+<td>716 MB</td>
+<td>20784</td>
+</tr>
+<tr>
+<td>10 TB</td>
+<td>1 GB</td>
+<td>24437</td>
+</tr>
+<tr>
+<td>20 TB</td>
+<td>1 GB</td>
+<td>34437</td>
+</tr>
+<tr>
+<td>50 TB</td>
+<td>1 GB</td>
+<td>64437</td>
+</tr>
+<tr>
+<td>100 TB</td>
+<td>1 GB</td>
+<td>114437</td>
 </tr>
 </tbody>
 </table>
@@ -623,7 +652,7 @@ Use it anyways when</p>
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            2461 words &middot; 12m read<br>
+            2478 words &middot; 12m read<br>
             Written as a markdown note in Obsidian.
             Built into this page by a Python script on 2026-10-09.
         </footer>
@@ -647,6 +676,11 @@ Use it anyways when</p>
             <li>
                 <span class="muted">2m read</span>
                 <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li>
+                <span class="muted">13m read</span>
+                <a href="delta-lake-performance-optimization-and-maintenance.html">Delta Lake - performance optimization and maintenance</a>
             </li>
             
             <li>
