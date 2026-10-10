@@ -34,7 +34,7 @@
 
     <header>
         <h1>Delta Lake - performance optimization and maintenance</h1>
-        <p class="meta">13m read &middot; 2657 words</p>
+        <p class="meta">13m read &middot; 2659 words</p>
     </header>
 
     
@@ -57,9 +57,12 @@
     <li><a href="#automated-liquid-clustering">Automated liquid clustering</a></li>
     <li><a href="#creating-modifying-tables-for-liquid-clustering">Creating/modifying tables for liquid clustering</a></li>
     <li><a href="#how-to-choose-columns-to-cluster-on">How to choose columns to cluster on</a></li>
+    <li><a href="#operational-stuff">Operational stuff</a>
+<ul>
     <li><a href="#create-new-table-with-liquid-clustering">Create new table with liquid clustering</a></li>
     <li><a href="#enable-liquid-clustering-on-existing-table">Enable liquid clustering on existing table</a></li>
     <li><a href="#change-liquid-clustering-columns">Change liquid-clustering columns</a></li>
+</ul></li>
 </ul></li>
     <li><a href="#auto-compaction-control-file-size">Auto-compaction - Control file size</a>
 <ul>
@@ -75,13 +78,14 @@
 </ul></li>
     <li><a href="#manual-intervention">Manual intervention</a></li>
     <li><a href="#optimize-data-layout-optimization">OPTIMIZE - data layout optimization</a></li>
-    <li><a href="#auto-optimization-wip-where-to-put-this-in-this-note">Auto-optimization - wip - WHERE TO PUT THIS IN THIS NOTE?</a></li>
-    <li><a href="#z-order-faster-reads-by-data-skipping">Z-ORDER - faster reads by data-skipping</a>
+    <li><a href="#partition-and-zorder">Partition and zorder</a>
 <ul>
+    <li><a href="#z-order-faster-reads-by-data-skipping">Z-ORDER - faster reads by data-skipping</a></li>
     <li><a href="#zorder-vs-bucketing">Zorder vs bucketing</a></li>
-</ul></li>
     <li><a href="#partitioning-wip">Partitioning - WIP</a></li>
+</ul></li>
     <li><a href="#vacuum-removing-stale-files-by-trimming-history">VACUUM - Removing stale files by trimming history</a></li>
+    <li><a href="#auto-optimization-wip-where-to-put-this-in-this-note">Auto-optimization - wip - WHERE TO PUT THIS IN THIS NOTE?</a></li>
 </ul>
         </div>
     </nav>
@@ -229,7 +233,8 @@ In this case, the liquid clustering columns won't need to be manually declared.<
 <li>Hive-style partitioning &amp; zorder - use columns used for partitioning the data and ZORDER BY columns</li>
 <li>Generated columns to reduce cardinality - use original column, don't create a generated column</li>
 </ul>
-<h2 id="create-new-table-with-liquid-clustering">Create new table with liquid clustering</h2>
+<h2 id="operational-stuff">Operational stuff</h2>
+<h3 id="create-new-table-with-liquid-clustering">Create new table with liquid clustering</h3>
 <div class="codehilite">
 <pre><span></span><code><span class="p">(</span>
     <span class="n">DeltaTable</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
@@ -252,7 +257,7 @@ In this case, the liquid clustering columns won't need to be manually declared.<
 <span class="k">AS</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">sales_raw</span><span class="p">;</span>
 </code></pre>
 </div>
-<h2 id="enable-liquid-clustering-on-existing-table">Enable liquid clustering on existing table</h2>
+<h3 id="enable-liquid-clustering-on-existing-table">Enable liquid clustering on existing table</h3>
 <div class="codehilite">
 <pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">events</span>
 <span class="k">SET</span><span class="w"> </span><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span>
@@ -260,7 +265,7 @@ In this case, the liquid clustering columns won't need to be manually declared.<
 <span class="p">)</span>
 </code></pre>
 </div>
-<h2 id="change-liquid-clustering-columns">Change liquid-clustering columns</h2>
+<h3 id="change-liquid-clustering-columns">Change liquid-clustering columns</h3>
 <div class="codehilite">
 <pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">table_name</span><span class="w"> </span><span class="k">CLUSTER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="n">new_column1</span><span class="p">,</span><span class="w"> </span><span class="n">new_column2</span><span class="p">);</span>
 </code></pre>
@@ -412,20 +417,8 @@ ALTER { SCHEMA | DATABASE } schema_name { ENABLE | DISABLE | INHERIT } PREDICTIV
 <p>Source - <a href="https://docs.databricks.com/aws/en/sql/language-manual/delta-optimize">Databricks: Delta Optimize</a></p>
 <p>Will perform bin-packing and z-ordering.</p>
 <p>Merges small files into larger ones. Good for read heavy tables.</p>
-<h1 id="auto-optimization-wip-where-to-put-this-in-this-note">Auto-optimization - wip - WHERE TO PUT THIS IN THIS NOTE?</h1>
-<p>The term has been split into 2:</p>
-<ul>
-<li>https://docs.databricks.com/aws/en/delta/tune-file-size#optimized-writes</li>
-<li>https://docs.databricks.com/aws/en/delta/tune-file-size#auto-compact</li>
-</ul>
-<div class="codehilite">
-<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span>
-<span class="w">  </span><span class="n">delta</span><span class="p">.</span><span class="n">autoOptimize</span><span class="p">.</span><span class="n">optimizeWrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>
-<span class="w">  </span><span class="n">delta</span><span class="p">.</span><span class="n">autoOptimize</span><span class="p">.</span><span class="n">autoCompact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<h1 id="z-order-faster-reads-by-data-skipping">Z-ORDER - faster reads by data-skipping</h1>
+<h1 id="partition-and-zorder">Partition and zorder</h1>
+<h2 id="z-order-faster-reads-by-data-skipping">Z-ORDER - faster reads by data-skipping</h2>
 <blockquote>
 <p>NOTE: As of now (2025), liquid clustering is recommended over Z-ORDERING.</p>
 </blockquote>
@@ -434,8 +427,8 @@ ALTER { SCHEMA | DATABASE } schema_name { ENABLE | DISABLE | INHERIT } PREDICTIV
 <p>Very costly operation to perform. Z-order will lead to re-write amplification. Every <code>OPTIMIZE ZORDER</code> will rewrite large chunks of data.</p>
 </blockquote>
 <ul>
+<li>Writes rows with similar values close together, and stores min/max stats per file</li>
 <li>Improves file-level data skipping when queries are filtering on multiple columns</li>
-<li>While writing  - writes rows with similar values close together, and stores min/max stats per file</li>
 </ul>
 <p>Now, spark can skip entire files by looking at the min/max stats. Very effective for range and equality filters</p>
 <p>Z-ORDER has to be triggered manually (in pipelines or scheduled jobs).<br/>
@@ -454,7 +447,7 @@ So, use Z-ORDER only for legacy tables, and one-off historical backfills.</p>
 <p>Zorder and bucketing solve completely different problems.<br/>
 Zorder will help speed up writes through data-skipping. Bucketing will help speed up execution by preventing shuffles during joins and aggregations.</p>
 <p>Z-order doesn't prevent the data-shuffle problem that bucketing does.</p>
-<h1 id="partitioning-wip">Partitioning - WIP</h1>
+<h2 id="partitioning-wip">Partitioning - WIP</h2>
 <p>If liquid clustering is not available, Partitioning + Z-ORDER  is the way to go, for enabling faster reads via file-skipping.</p>
 <p>Also naturally, partitioning won't work only if there are no low-cardinality columns that are being used by queries to filter data. This almost never happens in practice, so partitioning the table is almost always the go-to strategy.</p>
 <div class="codehilite">
@@ -474,13 +467,26 @@ Zorder will help speed up writes through data-skipping. Bucketing will help spee
 <pre><span></span><code><span class="k">VACUUM</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="n">RETAIN</span><span class="w"> </span><span class="mi">168</span><span class="w"> </span><span class="n">HOURS</span>
 </code></pre>
 </div>
+<h1 id="auto-optimization-wip-where-to-put-this-in-this-note">Auto-optimization - wip - WHERE TO PUT THIS IN THIS NOTE?</h1>
+<p>The term has been split into 2:</p>
+<ul>
+<li>https://docs.databricks.com/aws/en/delta/tune-file-size#optimized-writes</li>
+<li>https://docs.databricks.com/aws/en/delta/tune-file-size#auto-compact</li>
+</ul>
+<div class="codehilite">
+<pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">events</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">TBLPROPERTIES</span><span class="w"> </span><span class="p">(</span>
+<span class="w">  </span><span class="n">delta</span><span class="p">.</span><span class="n">autoOptimize</span><span class="p">.</span><span class="n">optimizeWrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">,</span>
+<span class="w">  </span><span class="n">delta</span><span class="p">.</span><span class="n">autoOptimize</span><span class="p">.</span><span class="n">autoCompact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span>
+<span class="p">)</span>
+</code></pre>
+</div>
 
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            2657 words &middot; 13m read<br>
+            2659 words &middot; 13m read<br>
             Written as a markdown note in Obsidian.
-            Built into this page by a Python script on 2026-10-09.
+            Built into this page by a Python script on 2026-10-10.
         </footer>
     </article>
 
@@ -540,7 +546,7 @@ Zorder will help speed up writes through data-skipping. Bucketing will help spee
 
     <footer class="site-footer">
         <p><a href="index.html">&larr; everprep</a></p>
-        <p>Generated on 09 Oct 2026 from markdown notes.</p>
+        <p>Generated on 10 Oct 2026 from markdown notes.</p>
     </footer>
 
 </div>
