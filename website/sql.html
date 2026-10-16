@@ -34,7 +34,7 @@
 
     <header>
         <h1>sql</h1>
-        <p class="meta">11m read &middot; 2297 words</p>
+        <p class="meta">12m read &middot; 2416 words</p>
     </header>
 
     
@@ -69,7 +69,8 @@
 </ul></li>
     <li><a href="#merge-overlapping-date-ranges">Merge overlapping date ranges</a></li>
 </ul></li>
-    <li><a href="#practice-questions">Practice questions</a>
+    <li><a href="#recursive-cte">Recursive CTE</a></li>
+    <li><a href="#online-practice-questions">Online practice questions</a>
 <ul>
     <li><a href="#streak-calculation">Streak calculation</a></li>
 </ul></li>
@@ -108,7 +109,7 @@
 <li>Candidate key - minimal superkey</li>
 <li>Composite key - key of more than 1 columns</li>
 </ul>
-<p><img alt="" src="z_asset_key_types.png"/></p>
+<p><img alt="" src="z_asset_key_types.webp"/></p>
 <h2 id="date-handling">Date handling</h2>
 <p>CAST - most portable function (part of SQL spec itself)</p>
 <div class="codehilite">
@@ -829,7 +830,48 @@
 <span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">next_status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'UP'</span><span class="p">;</span>
 </code></pre>
 </div>
-<h1 id="practice-questions">Practice questions</h1>
+<h2 id="recursive-cte">Recursive CTE</h2>
+<p>2 columns - manager(str) employee(str)</p>
+<p>Find who reports to whom</p>
+<div class="codehilite">
+<pre><span></span><code><span class="k">WITH</span><span class="w"> </span><span class="k">RECURSIVE</span><span class="w"> </span><span class="k">hierarchy</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="c1">-- Anchor: top-level managers</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">manager</span><span class="p">,</span>
+<span class="w">        </span><span class="n">employee</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">1</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">level</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">employees</span>
+<span class="w">    </span><span class="k">WHERE</span><span class="w"> </span><span class="n">manager</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">IN</span><span class="w"> </span><span class="p">(</span>
+<span class="w">        </span><span class="k">SELECT</span><span class="w"> </span><span class="n">employee</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">employees</span>
+<span class="w">    </span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">UNION</span><span class="w"> </span><span class="k">ALL</span>
+
+<span class="w">    </span><span class="c1">-- Recursive step: find the next level of reports</span>
+<span class="w">    </span><span class="k">SELECT</span>
+<span class="w">        </span><span class="n">e</span><span class="p">.</span><span class="n">manager</span><span class="p">,</span>
+<span class="w">        </span><span class="n">e</span><span class="p">.</span><span class="n">employee</span><span class="p">,</span>
+<span class="w">        </span><span class="n">h</span><span class="p">.</span><span class="k">level</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">FROM</span><span class="w"> </span><span class="n">employees</span><span class="w"> </span><span class="n">e</span>
+<span class="w">    </span><span class="k">JOIN</span><span class="w"> </span><span class="k">hierarchy</span><span class="w"> </span><span class="n">h</span>
+<span class="w">        </span><span class="k">ON</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">manager</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h</span><span class="p">.</span><span class="n">employee</span>
+<span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span>
+<span class="k">FROM</span><span class="w"> </span><span class="k">hierarchy</span>
+<span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="k">level</span><span class="p">,</span><span class="w"> </span><span class="n">manager</span><span class="p">,</span><span class="w"> </span><span class="n">employee</span><span class="p">;</span>
+</code></pre>
+</div>
+<p>Result:</p>
+<pre><code>Manager Employee    Level
+Ana     Ben         1
+Ana     Cléa        1
+Ben     Dev         2
+Ben     Eli         2
+Cléa    Fay         2
+Dev     Gus         3
+Fay     Hal         3
+</code></pre>
+<h1 id="online-practice-questions">Online practice questions</h1>
 <h2 id="streak-calculation">Streak calculation</h2>
 <ul>
 <li><a href="https://datapathsala.com/problems/suspicious-login-activity">suspicious-login-activity</a></li>
@@ -838,9 +880,9 @@
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            2297 words &middot; 11m read<br>
+            2416 words &middot; 12m read<br>
             Written as a markdown note in Obsidian.
-            Built into this page by a Python script on 2026-10-12.
+            Built into this page by a Python script on 2026-10-16.
         </footer>
     </article>
 
@@ -890,7 +932,7 @@
             </li>
             
             <li class="is-current">
-                <span class="muted">11m read</span>
+                <span class="muted">12m read</span>
                 <a href="sql.html">sql</a>
             </li>
             
@@ -900,7 +942,7 @@
 
     <footer class="site-footer">
         <p><a href="index.html">&larr; everprep</a></p>
-        <p>Generated on 12 Oct 2026 from markdown notes.</p>
+        <p>Generated on 16 Oct 2026 from markdown notes.</p>
     </footer>
 
 </div>
