@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>cloud - Databricks Services and How They Work - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>cloud - Databricks Services and How They Work</h1>
+        <p class="meta">11m read &middot; 2178 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#at-a-glance">At a glance</a></li>
+    <li><a href="#foundation">Foundation</a></li>
+    <li><a href="#compute">Compute</a></li>
+    <li><a href="#data-engineering-lakeflow">Data engineering (Lakeflow)</a></li>
+    <li><a href="#data-warehousing-bi">Data warehousing &amp; BI</a></li>
+    <li><a href="#governance-sharing">Governance &amp; sharing</a></li>
+    <li><a href="#machine-learning-ai">Machine learning &amp; AI</a></li>
+    <li><a href="#apps-operational-data">Apps &amp; operational data</a></li>
+    <li><a href="#developer-tooling-operations">Developer tooling &amp; operations</a></li>
+    <li><a href="#sources">Sources</a></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<p>Databricks is one platform where every service reads and writes the same open tables (Delta Lake or Iceberg) in your own cloud storage, governed by one catalog (Unity Catalog). Ingestion, ETL, SQL warehousing, BI, ML, AI agents, apps and an operational Postgres database are separate services on top of that one copy of data, each running on Databricks-managed or serverless compute. Names below reflect the 2026 renames (Delta Sharing is now OpenSharing, Databricks Assistant is now Genie Code, Genie Spaces are now Genie Agents).</p>
+<h1 id="at-a-glance">At a glance</h1>
+<p><img alt="" src="cloud%20-%20databricks-1792231904899.webp"/></p>
+<p>Because every service sits on the same catalog and tables, a pipeline's output is immediately queryable in SQL, usable for model training and servable to an app, with no copies in between.</p>
+<h1 id="foundation">Foundation</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Control plane vs compute plane</td>
+<td>Splits Databricks' own backend from where your data is processed.</td>
+<td>The control plane (web UI, notebooks, job scheduler, cluster manager) runs in Databricks' account. Compute runs either as VMs in your cloud account (classic) or in Databricks' account (serverless). Data stays in your object storage.</td>
+</tr>
+<tr>
+<td>Workspace</td>
+<td>The environment where a team works: notebooks, jobs, dashboards, permissions.</td>
+<td>Several workspaces sit under one Databricks account; all of them can attach to the same Unity Catalog metastore so they see the same tables.</td>
+</tr>
+<tr>
+<td>Delta Lake</td>
+<td>The default table format: ACID transactions on files in S3/ADLS/GCS.</td>
+<td>Data is stored as Parquet files; a <code>_delta_log</code> folder of JSON commits records which files make up each version. That log gives you transactions, time travel (<code>VERSION AS OF</code>), schema enforcement and <code>MERGE</code>.</td>
+</tr>
+<tr>
+<td>Apache Iceberg support</td>
+<td>Lets the same tables be read by Iceberg engines (Snowflake, Trino, etc.).</td>
+<td>Managed Iceberg tables are native; Delta tables can expose Iceberg metadata (UniForm) so either format's readers work on one copy.</td>
+</tr>
+<tr>
+<td>Databricks Runtime</td>
+<td>The software image every cluster runs.</td>
+<td>Apache Spark plus Databricks optimisations, libraries and connectors; versioned (e.g., Runtime 19), with ML variants that bundle PyTorch, XGBoost, etc.</td>
+</tr>
+<tr>
+<td>Predictive optimization</td>
+<td>Keeps tables fast without manual tuning.</td>
+<td>Runs <code>OPTIMIZE</code> (compaction), <code>VACUUM</code> and statistics collection on managed tables automatically, based on observed usage.</td>
+</tr>
+<tr>
+<td>Liquid clustering</td>
+<td>Replaces partitioning and Z-ordering.</td>
+<td>You name clustering keys; Databricks incrementally reorganises files around them so queries skip irrelevant files, and keys can change without rewriting the table.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="compute">Compute</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All-purpose clusters</td>
+<td>Interactive compute for notebooks and exploration.</td>
+<td>A driver node plus worker VMs running Spark; you choose instance types, autoscaling range and auto-termination. Shared by several users.</td>
+</tr>
+<tr>
+<td>Job clusters</td>
+<td>Compute for one scheduled job run.</td>
+<td>Created when the job starts and destroyed when it ends, so you pay only for the run and no one else's work interferes. Cheaper per DBU than all-purpose.</td>
+</tr>
+<tr>
+<td>Serverless compute</td>
+<td>Notebooks, jobs and pipelines with no cluster to configure.</td>
+<td>Databricks keeps warm capacity in its own account and attaches it in seconds; it autoscales and you pay per use.</td>
+</tr>
+<tr>
+<td>SQL warehouses</td>
+<td>Compute dedicated to SQL queries and BI tools.</td>
+<td>Classic, Pro or Serverless clusters tuned for SQL, with Photon on, result caching and query queuing; scale out by adding clusters as concurrency grows.</td>
+</tr>
+<tr>
+<td>Photon</td>
+<td>Faster query engine under Spark and SQL.</td>
+<td>A C++ vectorised engine that replaces parts of Spark's JVM execution for scans, joins and aggregations; no code changes needed.</td>
+</tr>
+<tr>
+<td>Serverless GPUs / AI Runtime</td>
+<td>GPU compute for model training and fine-tuning.</td>
+<td>Request GPUs from a notebook or job without provisioning a GPU cluster; billed only while running.</td>
+</tr>
+<tr>
+<td>Lakehouse//RT</td>
+<td>Millisecond-latency, high-concurrency serving on lakehouse tables.</td>
+<td>A real-time query tier over your existing open tables, autoscaling to zero when idle, still governed by Unity Catalog, so no separate real-time database is needed.</td>
+</tr>
+<tr>
+<td>Instance pools &amp; policies</td>
+<td>Faster start-up and cost guardrails for classic compute.</td>
+<td>Pools keep idle VMs ready to hand to clusters; compute policies restrict what users can create (sizes, tags, runtimes).</td>
+</tr>
+</tbody>
+</table>
+<h1 id="data-engineering-lakeflow">Data engineering (Lakeflow)</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lakeflow Connect</td>
+<td>Managed ingestion from databases and SaaS apps (100+ connectors).</td>
+<td>Pick a source (Salesforce, SQL Server, Workday, etc.); Databricks runs a gateway/CDC process that lands changes incrementally into Delta tables, handling schema changes and retries.</td>
+</tr>
+<tr>
+<td>Zerobus Ingest</td>
+<td>Push events directly into tables.</td>
+<td>Apps send records to a Databricks endpoint, which writes them straight into Unity Catalog tables without a Kafka hop in between.</td>
+</tr>
+<tr>
+<td>Auto Loader</td>
+<td>Incrementally load new files arriving in cloud storage.</td>
+<td><code>cloudFiles</code> streaming source; tracks which files it has processed (via directory listing or cloud notifications) so each file is ingested exactly once, and infers and evolves schema.</td>
+</tr>
+<tr>
+<td>Lakeflow Spark Declarative Pipelines (formerly Delta Live Tables)</td>
+<td>Build batch or streaming ETL by declaring tables, not steps.</td>
+<td>You write <code>CREATE STREAMING TABLE</code> / <code>MATERIALIZED VIEW</code> (SQL or Python); the engine works out the dependency graph, runs it in order, applies incremental refresh, enforces data-quality expectations and retries failures. A real-time mode targets millisecond latency.</td>
+</tr>
+<tr>
+<td>Lakeflow Jobs (formerly Workflows)</td>
+<td>Orchestrate notebooks, SQL, pipelines, dbt, Python and more.</td>
+<td>A job is a DAG of tasks with dependencies, retries, conditionals and loops; triggered by schedule, file arrival, table update or API.</td>
+</tr>
+<tr>
+<td>Lakeflow Designer</td>
+<td>No-code visual pipeline builder for analysts.</td>
+<td>Drag-and-drop or describe the transformation in plain English; it generates a governed pipeline that runs on the same engine as coded pipelines.</td>
+</tr>
+<tr>
+<td>Structured Streaming</td>
+<td>Spark's streaming engine, used under the services above.</td>
+<td>Treats a stream as an unbounded table processed in micro-batches (or continuous mode), with checkpoints for exactly-once results.</td>
+</tr>
+<tr>
+<td>Genie ZeroOps (preview)</td>
+<td>Agent that keeps pipelines healthy.</td>
+<td>Monitors pipelines and jobs, diagnoses failures and proposes or applies fixes within the permissions you grant.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="data-warehousing-bi">Data warehousing &amp; BI</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Databricks SQL</td>
+<td>The data warehouse: SQL editor, queries, alerts, BI connectivity.</td>
+<td>Runs ANSI SQL on SQL warehouses against Unity Catalog tables; Tableau, Power BI and others connect over JDBC/ODBC.</td>
+</tr>
+<tr>
+<td>AI/BI Dashboards</td>
+<td>Built-in dashboards.</td>
+<td>Each visual is backed by a SQL dataset run on a warehouse; dashboards can be published with embedded credentials and scheduled as email snapshots.</td>
+</tr>
+<tr>
+<td>Genie Agents (formerly Genie Spaces)</td>
+<td>Ask questions of your data in plain English.</td>
+<td>A curated space of tables, instructions and example queries; an LLM turns the question into SQL, runs it under the asker's permissions and returns a table or chart.</td>
+</tr>
+<tr>
+<td>Genie One</td>
+<td>The business user's front door: a chat "coworker" across data and apps.</td>
+<td>One account-level Genie (formerly Databricks One) on web, mobile, Slack, Teams, Excel and Sheets; routes each question to the right Genie Agent, dashboard or document, grounded by the Genie Ontology.</td>
+</tr>
+<tr>
+<td>Unity Catalog metric views</td>
+<td>A governed semantic layer.</td>
+<td>Define measures and dimensions once in YAML/SQL; dashboards, Genie and external BI tools all query the same definitions.</td>
+</tr>
+<tr>
+<td>Query federation (Lakehouse Federation)</td>
+<td>Query external databases without copying data.</td>
+<td>Register a connection to MySQL, PostgreSQL, Snowflake, BigQuery, etc. as a foreign catalog; queries are pushed down to the source, governed by Unity Catalog.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="governance-sharing">Governance &amp; sharing</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unity Catalog</td>
+<td>One place to govern tables, files, models, functions and agents across all workspaces.</td>
+<td>A three-level namespace <code>catalog.schema.object</code>; permissions are SQL <code>GRANT</code>s checked by every engine on every access. It also records column-level lineage, audit logs, tags and row/column masks.</td>
+</tr>
+<tr>
+<td>Volumes</td>
+<td>Govern non-tabular files (PDFs, images, CSVs).</td>
+<td>A Unity Catalog object pointing to a storage path; accessed as <code>/Volumes/catalog/schema/volume/...</code> with the same permissions as tables.</td>
+</tr>
+<tr>
+<td>Catalog federation</td>
+<td>Govern tables registered in other catalogs (Hive metastore, AWS Glue, Snowflake Horizon).</td>
+<td>Mirrors the external catalog's metadata into Unity Catalog so Databricks can query and govern those tables in place.</td>
+</tr>
+<tr>
+<td>OpenSharing (formerly Delta Sharing)</td>
+<td>Share live data and AI assets with anyone, on any platform, without copying.</td>
+<td>An open protocol (now a Linux Foundation project): the provider grants a share; the recipient's client gets short-lived signed URLs to read the underlying files directly. Now also covers models, agent skills and Genie Agents, and Iceberg clients.</td>
+</tr>
+<tr>
+<td>Databricks Marketplace</td>
+<td>Find, buy and sell datasets, models, notebooks and apps.</td>
+<td>Listings are delivered through OpenSharing, so a purchased dataset appears as a catalog in your workspace.</td>
+</tr>
+<tr>
+<td>Clean Rooms</td>
+<td>Joint analysis with a partner without exposing raw data.</td>
+<td>Both parties share tables into an isolated environment; only approved notebooks run there and only their outputs leave.</td>
+</tr>
+<tr>
+<td>Data quality monitoring</td>
+<td>Detect stale, drifting or broken tables.</td>
+<td>Profiles tables over time, tracks freshness and statistics, and raises anomalies and alerts.</td>
+</tr>
+<tr>
+<td>Lakewatch (preview)</td>
+<td>Security SIEM built on the lakehouse.</td>
+<td>Lands security logs into governed tables and runs AI agents for detection, triage and response.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="machine-learning-ai">Machine learning &amp; AI</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Managed MLflow</td>
+<td>Track experiments, register models, trace and evaluate GenAI apps.</td>
+<td>Each training run logs parameters, metrics and artifacts; models are registered in Unity Catalog with versions and aliases; MLflow Tracing records every step of an agent call for debugging and evaluation.</td>
+</tr>
+<tr>
+<td>Feature engineering / feature store</td>
+<td>Reuse features consistently in training and serving.</td>
+<td>Features are Delta tables with primary keys in Unity Catalog; they are joined automatically at training time and served from online stores (backed by Lakebase) at inference.</td>
+</tr>
+<tr>
+<td>AutoML</td>
+<td>Quick baseline models for classification, regression, forecasting.</td>
+<td>Tries several algorithms and hyperparameters, then generates editable notebooks for the best runs.</td>
+</tr>
+<tr>
+<td>Model Serving</td>
+<td>Deploy models as REST endpoints.</td>
+<td>Serverless endpoints that autoscale (including to zero); serve custom models, external models (OpenAI, Anthropic) or Foundation Model APIs (Llama, Claude, etc.) behind one interface.</td>
+</tr>
+<tr>
+<td>Foundation Model APIs</td>
+<td>Call hosted LLMs from SQL or Python.</td>
+<td>Pay-per-token or provisioned-throughput endpoints; <code>ai_query()</code> and other AI functions call them row by row inside SQL.</td>
+</tr>
+<tr>
+<td>Vector Search</td>
+<td>Similarity search for RAG.</td>
+<td>Builds an index from a Delta table, embeds the text, and keeps the index synced automatically as the table changes; queried by endpoint.</td>
+</tr>
+<tr>
+<td>Agent Bricks</td>
+<td>Build, evaluate and run production AI agents.</td>
+<td>Choose a task (extraction, knowledge assistant, multi-agent) or bring your own framework (LangGraph, CrewAI, Claude Code SDK, OpenAI Agents SDK); Databricks supplies tools, managed memory on Lakebase, sandboxes for running code, and automatic evaluation/optimisation.</td>
+</tr>
+<tr>
+<td>Unity AI Gateway</td>
+<td>Govern every LLM and agent call.</td>
+<td>A proxy in front of model endpoints and tools: rate limits, guardrails (PII, safety), usage tracking and payload logging into tables.</td>
+</tr>
+<tr>
+<td>AI Playground</td>
+<td>Try models and prompts in the browser.</td>
+<td>Chat UI to compare LLMs side by side and prototype tool-calling agents, then export the code.</td>
+</tr>
+<tr>
+<td>AI Functions</td>
+<td>LLM tasks as SQL functions.</td>
+<td><code>ai_classify</code>, <code>ai_extract</code>, <code>ai_parse_document</code>, <code>ai_query</code> etc. run an LLM over each row in a query or pipeline.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="apps-operational-data">Apps &amp; operational data</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lakebase</td>
+<td>Fully managed, serverless Postgres for apps and agents (OLTP).</td>
+<td>Postgres with storage separated from compute: instances autoscale to zero, and branching/snapshots take about a second, so dev and AI tools can work on safe copies. Synced tables keep Postgres and lakehouse tables in step; Lakebase Search adds vector and full-text search.</td>
+</tr>
+<tr>
+<td>LTAP</td>
+<td>Transactions and analytics on one copy of data.</td>
+<td>Lakebase handles writes while the lakehouse engines read the same open-format data, removing the ETL step between the app database and analytics tables. Rolling out to existing Lakebase customers.</td>
+</tr>
+<tr>
+<td>Databricks Apps</td>
+<td>Host internal web apps and data tools next to your data.</td>
+<td>Deploy a Streamlit, Dash, Gradio, Flask, React or Node app; it runs on serverless containers, signs users in with Databricks identity and calls warehouses, Lakebase, Model Serving and Genie with governed permissions. Apps can also be listed on Marketplace.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="developer-tooling-operations">Developer tooling &amp; operations</h1>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it does</th>
+<th>How it works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Notebooks</td>
+<td>Interactive Python, SQL, Scala and R.</td>
+<td>Cells execute on attached compute; supports real-time co-editing, widgets for parameters, and calling other notebooks.</td>
+</tr>
+<tr>
+<td>Genie Code (formerly Databricks Assistant)</td>
+<td>AI agent for data work inside the workspace.</td>
+<td>Lives in notebooks, the SQL editor, the pipelines editor and dashboards; plans and runs multi-step tasks (write ETL, debug a failed job, build a dashboard) using workspace context, within Unity Catalog permissions.</td>
+</tr>
+<tr>
+<td>Git folders</td>
+<td>Version control for notebooks and code.</td>
+<td>Clone a GitHub/GitLab/Azure DevOps repo into the workspace; commit, branch and pull from the UI.</td>
+</tr>
+<tr>
+<td>Databricks Asset Bundles</td>
+<td>Deploy jobs, pipelines and apps as code (CI/CD).</td>
+<td>A <code>databricks.yml</code> file describes resources per environment (dev/staging/prod); <code>databricks bundle deploy</code> creates or updates them.</td>
+</tr>
+<tr>
+<td>CLI, SDKs, REST API, Terraform</td>
+<td>Automate everything.</td>
+<td>Every UI action is a REST call; the CLI, Python/Java/Go SDKs and the Terraform provider wrap it.</td>
+</tr>
+<tr>
+<td>Databricks Connect</td>
+<td>Run code from your own IDE against Databricks compute.</td>
+<td>Your local Spark session sends the query plan to a remote cluster or serverless compute and gets results back.</td>
+</tr>
+<tr>
+<td>System tables</td>
+<td>Observability on usage, cost, lineage and audit.</td>
+<td>Read-only tables under <code>system.*</code> (e.g., <code>system.billing.usage</code>, <code>system.access.audit</code>) that you query with SQL.</td>
+</tr>
+<tr>
+<td>Budgets &amp; cost controls</td>
+<td>Track and cap spend.</td>
+<td>Budgets on tagged usage with email alerts; per-user limits for products such as Genie One.</td>
+</tr>
+<tr>
+<td>Free Edition</td>
+<td>Learn and build at no cost.</td>
+<td>A serverless-only workspace for individuals; now includes Genie Code, serverless GPUs, Lakebase, Agent Bricks and Lakeflow Designer.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="sources">Sources</h1>
+<p>Current product names and 2026 launches were checked against these pages; the "how it works" descriptions are from general knowledge of the platform.</p>
+<ul>
+<li><a href="https://docs.databricks.com/release-notes/product/">Databricks platform release notes</a></li>
+<li><a href="https://docs.databricks.com/aws/en/release-notes/product/2026/june">Databricks release notes, June 2026</a> (Delta Sharing renamed OpenSharing)</li>
+<li><a href="https://www.databricks.com/blog/agent-bricks-dais-2026">Agent Bricks: Data + AI Summit 2026</a></li>
+<li><a href="https://www.databricks.com/product/lakehouse/real-time-lakehouse">Lakehouse//RT product page</a></li>
+<li><a href="https://databricks.com/product/lakewatch">Lakewatch product page</a></li>
+<li><a href="https://www.blocksandfiles.com/ai-ml/2026/06/18/databricks-lets-a-genie-one-ai-agent-coworker-out-of-its-magic-lamp/5258187">Genie One launch coverage, Blocks &amp; Files</a></li>
+</ul>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            2178 words &middot; 11m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-17.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">14m read</span>
+                <a href="cloud-aws-services-list.html">cloud - aws services list</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">11m read</span>
+                <a href="cloud-databricks-services-and-how-they-work.html">cloud - Databricks Services and How They Work</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li>
+                <span class="muted">13m read</span>
+                <a href="delta-lake-performance-optimization-and-maintenance.html">Delta Lake - performance optimization and maintenance</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="python-leetcode.html">python - leetcode</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">12m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">12m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 17 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>

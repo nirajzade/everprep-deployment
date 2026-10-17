@@ -34,7 +34,7 @@
 
     <header>
         <h1>spark - code</h1>
-        <p class="meta">24m read &middot; 4834 words</p>
+        <p class="meta">24m read &middot; 4884 words</p>
     </header>
 
     
@@ -45,6 +45,7 @@
 <ul>
     <li><a href="#case">case</a></li>
     <li><a href="#filters-where">filters - where</a></li>
+    <li><a href="#group-by-using-agg">group by - using agg</a></li>
     <li><a href="#join">join</a></li>
     <li><a href="#window-functions">window functions</a>
 <ul>
@@ -163,6 +164,16 @@
 
 <span class="c1"># after explode</span>
 <span class="n">df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">"order.amt"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">)</span>
+</code></pre>
+</div>
+<h1 id="group-by-using-agg">group by - using agg</h1>
+<div class="codehilite">
+<pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s2">"department"</span><span class="p">)</span>
+  <span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+      <span class="n">F</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"total_a"</span><span class="p">),</span>
+      <span class="n">F</span><span class="o">.</span><span class="n">avg</span><span class="p">(</span><span class="s2">"b"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"average_b"</span><span class="p">),</span>
+      <span class="n">F</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"c"</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"count_c"</span><span class="p">)</span>
+<span class="p">)</span>
 </code></pre>
 </div>
 <h1 id="join">join</h1>
@@ -1386,7 +1397,7 @@ MMM    → month name
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            4834 words &middot; 24m read<br>
+            4884 words &middot; 24m read<br>
             Written as a markdown note in Obsidian.
             Built into this page by a Python script on 2026-10-17.
         </footer>
@@ -1400,6 +1411,16 @@ MMM    → month name
             <li>
                 <span class="muted">3m read</span>
                 <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">14m read</span>
+                <a href="cloud-aws-services-list.html">cloud - aws services list</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="cloud-databricks-services-and-how-they-work.html">cloud - Databricks Services and How They Work</a>
             </li>
             
             <li>

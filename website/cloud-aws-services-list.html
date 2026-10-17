@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>cloud - aws services list - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>cloud - aws services list</h1>
+        <p class="meta">14m read &middot; 2760 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#aws-services-by-category">AWS Services by Category</a>
+<ul>
+    <li><a href="#compute">Compute</a></li>
+    <li><a href="#containers">Containers</a></li>
+    <li><a href="#serverless-application-integration">Serverless &amp; Application Integration</a></li>
+    <li><a href="#storage">Storage</a></li>
+    <li><a href="#databases">Databases</a></li>
+    <li><a href="#networking-content-delivery">Networking &amp; Content Delivery</a></li>
+    <li><a href="#security-identity-compliance">Security, Identity &amp; Compliance</a></li>
+    <li><a href="#analytics">Analytics</a></li>
+    <li><a href="#machine-learning-generative-ai">Machine Learning &amp; Generative AI</a></li>
+    <li><a href="#developer-tools">Developer Tools</a></li>
+    <li><a href="#management-governance">Management &amp; Governance</a></li>
+    <li><a href="#cloud-financial-management">Cloud Financial Management</a></li>
+    <li><a href="#migration-transfer">Migration &amp; Transfer</a></li>
+    <li><a href="#frontend-web-mobile">Frontend Web &amp; Mobile</a></li>
+    <li><a href="#media-services">Media Services</a></li>
+    <li><a href="#internet-of-things">Internet of Things</a></li>
+    <li><a href="#business-applications-end-user-computing">Business Applications &amp; End-User Computing</a></li>
+    <li><a href="#specialty-quantum-satellite-blockchain-games-communications">Specialty: Quantum, Satellite, Blockchain, Games, Communications</a></li>
+</ul></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<h1 id="aws-services-by-category">AWS Services by Category</h1>
+<p>Oct 17, 2026 · @niraj</p>
+<p>AWS offers 200+ services; this list groups the ones you will actually meet into 18 categories, each with one line on what it is used for. A service that fits two categories appears once, where it is most often used. Services still running but closed to new customers are flagged in their row; services AWS has fully shut down are listed at the end. Lifecycle status is checked against AWS's own lifecycle pages.</p>
+<h2 id="compute">Compute</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon EC2</td>
+<td>Rent resizable virtual servers (instances) by the second.</td>
+</tr>
+<tr>
+<td>EC2 Auto Scaling</td>
+<td>Add or remove EC2 instances automatically as load changes.</td>
+</tr>
+<tr>
+<td>Amazon EC2 Image Builder</td>
+<td>Build, patch and test machine images (AMIs) on a pipeline.</td>
+</tr>
+<tr>
+<td>AWS Lambda</td>
+<td>Run code on events without managing servers; pay per invocation.</td>
+</tr>
+<tr>
+<td>AWS Elastic Beanstalk</td>
+<td>Deploy a web app by uploading code; AWS provisions the stack.</td>
+</tr>
+<tr>
+<td>Amazon Lightsail</td>
+<td>Simple, flat-priced VPS, databases and load balancers for small sites.</td>
+</tr>
+<tr>
+<td>AWS Batch</td>
+<td>Run large batches of jobs on managed EC2/Fargate capacity.</td>
+</tr>
+<tr>
+<td>AWS Outposts</td>
+<td>AWS-managed racks/servers in your own data center.</td>
+</tr>
+<tr>
+<td>AWS Local Zones</td>
+<td>AWS compute placed in metro areas for single-digit-ms latency.</td>
+</tr>
+<tr>
+<td>AWS Wavelength</td>
+<td>AWS compute inside 5G carrier networks for mobile edge apps.</td>
+</tr>
+<tr>
+<td>AWS ParallelCluster</td>
+<td>Deploy and manage HPC clusters on AWS.</td>
+</tr>
+<tr>
+<td>AWS Parallel Computing Service (PCS)</td>
+<td>Managed Slurm clusters for HPC workloads.</td>
+</tr>
+<tr>
+<td>AWS Compute Optimizer</td>
+<td>Recommends right-sized instances, volumes and Lambda settings.</td>
+</tr>
+<tr>
+<td>VMware Cloud on AWS / Amazon EVS</td>
+<td>Run VMware vSphere workloads on AWS bare-metal hosts.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="containers">Containers</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon ECS</td>
+<td>AWS's own orchestrator for running Docker containers.</td>
+</tr>
+<tr>
+<td>Amazon EKS</td>
+<td>Managed Kubernetes control plane (and optional managed nodes).</td>
+</tr>
+<tr>
+<td>AWS Fargate</td>
+<td>Serverless compute for ECS/EKS containers; no instances to manage.</td>
+</tr>
+<tr>
+<td>Amazon ECR</td>
+<td>Private and public registry for container images.</td>
+</tr>
+<tr>
+<td>AWS App Runner</td>
+<td>Deploy a container or source repo as a web service in one step. Closed to new customers since Apr 2026.</td>
+</tr>
+<tr>
+<td>Amazon ECS Anywhere / EKS Anywhere</td>
+<td>Run ECS or EKS on your own on-prem servers.</td>
+</tr>
+<tr>
+<td>Red Hat OpenShift Service on AWS (ROSA)</td>
+<td>Managed OpenShift clusters on AWS.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="serverless-application-integration">Serverless &amp; Application Integration</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon SQS</td>
+<td>Fully managed message queues to decouple services.</td>
+</tr>
+<tr>
+<td>Amazon SNS</td>
+<td>Pub/sub messaging and push notifications (SMS, email, mobile).</td>
+</tr>
+<tr>
+<td>Amazon EventBridge</td>
+<td>Event bus, scheduler and pipes routing events between AWS, SaaS and your apps.</td>
+</tr>
+<tr>
+<td>AWS Step Functions</td>
+<td>Orchestrate multi-step workflows as visual state machines.</td>
+</tr>
+<tr>
+<td>Amazon MQ</td>
+<td>Managed ActiveMQ and RabbitMQ brokers for existing apps.</td>
+</tr>
+<tr>
+<td>Amazon API Gateway</td>
+<td>Create, secure and publish REST, HTTP and WebSocket APIs.</td>
+</tr>
+<tr>
+<td>AWS AppSync</td>
+<td>Managed GraphQL APIs and real-time pub/sub.</td>
+</tr>
+<tr>
+<td>Amazon MWAA</td>
+<td>Managed Apache Airflow for scheduling data workflows.</td>
+</tr>
+<tr>
+<td>Amazon AppFlow</td>
+<td>No-code data flows between SaaS apps (Salesforce, etc.) and AWS.</td>
+</tr>
+<tr>
+<td>AWS B2B Data Interchange</td>
+<td>Translate and process EDI documents with trading partners.</td>
+</tr>
+<tr>
+<td>AWS Serverless Application Repository</td>
+<td>Discover and deploy prebuilt serverless apps.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="storage">Storage</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon S3</td>
+<td>Object storage for any amount of data; the default data lake layer.</td>
+</tr>
+<tr>
+<td>S3 Glacier storage classes</td>
+<td>Low-cost archival tiers inside S3 (Instant, Flexible, Deep Archive).</td>
+</tr>
+<tr>
+<td>Amazon S3 Tables / S3 Vectors</td>
+<td>S3 buckets optimised for Apache Iceberg tables and for vector embeddings.</td>
+</tr>
+<tr>
+<td>Amazon EBS</td>
+<td>Block storage volumes attached to EC2 instances.</td>
+</tr>
+<tr>
+<td>Amazon EFS</td>
+<td>Elastic NFS file system shared across many instances.</td>
+</tr>
+<tr>
+<td>Amazon FSx</td>
+<td>Managed file systems: Windows, Lustre, NetApp ONTAP, OpenZFS.</td>
+</tr>
+<tr>
+<td>Amazon File Cache</td>
+<td>High-speed cache over on-prem or cloud file data for compute jobs.</td>
+</tr>
+<tr>
+<td>AWS Storage Gateway</td>
+<td>Connect on-prem apps to cloud storage via file, volume or tape.</td>
+</tr>
+<tr>
+<td>AWS Backup</td>
+<td>Centralised, policy-based backups across AWS services.</td>
+</tr>
+<tr>
+<td>AWS Elastic Disaster Recovery</td>
+<td>Continuous replication of servers for fast failover to AWS.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="databases">Databases</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon RDS</td>
+<td>Managed relational DBs: MySQL, PostgreSQL, MariaDB, Oracle, SQL Server, Db2.</td>
+</tr>
+<tr>
+<td>Amazon Aurora</td>
+<td>AWS's high-performance MySQL/PostgreSQL-compatible database (incl. Serverless).</td>
+</tr>
+<tr>
+<td>Amazon Aurora DSQL</td>
+<td>Serverless, distributed PostgreSQL-compatible SQL with multi-Region active-active writes.</td>
+</tr>
+<tr>
+<td>Amazon DynamoDB</td>
+<td>Serverless key-value / document NoSQL with single-digit-ms latency.</td>
+</tr>
+<tr>
+<td>Amazon ElastiCache</td>
+<td>Managed in-memory cache: Valkey, Redis OSS, Memcached.</td>
+</tr>
+<tr>
+<td>Amazon MemoryDB</td>
+<td>Durable in-memory database (Valkey/Redis-compatible) for primary storage.</td>
+</tr>
+<tr>
+<td>Amazon DocumentDB</td>
+<td>MongoDB-compatible document database.</td>
+</tr>
+<tr>
+<td>Amazon Keyspaces</td>
+<td>Serverless Apache Cassandra-compatible database.</td>
+</tr>
+<tr>
+<td>Amazon Neptune</td>
+<td>Graph database for connected data (Gremlin, openCypher, SPARQL).</td>
+</tr>
+<tr>
+<td>Amazon Timestream</td>
+<td>Time-series database for IoT and metrics; new customers use Timestream for InfluxDB.</td>
+</tr>
+<tr>
+<td>Oracle Database@AWS</td>
+<td>Oracle Exadata databases running inside AWS data centers.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="networking-content-delivery">Networking &amp; Content Delivery</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon VPC</td>
+<td>Your own isolated virtual network: subnets, route tables, gateways.</td>
+</tr>
+<tr>
+<td>Elastic Load Balancing</td>
+<td>Distribute traffic: Application, Network and Gateway Load Balancers.</td>
+</tr>
+<tr>
+<td>Amazon CloudFront</td>
+<td>Global CDN for caching and delivering content at the edge.</td>
+</tr>
+<tr>
+<td>Amazon Route 53</td>
+<td>DNS, domain registration and health-check-based routing.</td>
+</tr>
+<tr>
+<td>AWS Direct Connect</td>
+<td>Dedicated private line from your data center to AWS.</td>
+</tr>
+<tr>
+<td>AWS Site-to-Site VPN</td>
+<td>Encrypted IPsec tunnels from on-prem networks to a VPC.</td>
+</tr>
+<tr>
+<td>AWS Client VPN</td>
+<td>Managed VPN for remote users to reach AWS/on-prem resources.</td>
+</tr>
+<tr>
+<td>AWS Transit Gateway</td>
+<td>Hub that connects many VPCs and on-prem networks.</td>
+</tr>
+<tr>
+<td>AWS Cloud WAN</td>
+<td>Build and manage a global WAN on the AWS backbone.</td>
+</tr>
+<tr>
+<td>AWS PrivateLink</td>
+<td>Private connectivity to services without exposing traffic to the internet.</td>
+</tr>
+<tr>
+<td>Amazon VPC Lattice</td>
+<td>Service-to-service networking, routing and auth across VPCs/accounts.</td>
+</tr>
+<tr>
+<td>AWS Global Accelerator</td>
+<td>Static anycast IPs that route users over the AWS backbone.</td>
+</tr>
+<tr>
+<td>AWS Cloud Map</td>
+<td>Service discovery registry for cloud resources.</td>
+</tr>
+<tr>
+<td>AWS Verified Access</td>
+<td>VPN-less, zero-trust access to corporate apps.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="security-identity-compliance">Security, Identity &amp; Compliance</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS IAM</td>
+<td>Users, roles and policies controlling who can do what in AWS.</td>
+</tr>
+<tr>
+<td>AWS IAM Identity Center</td>
+<td>Single sign-on across AWS accounts and business apps.</td>
+</tr>
+<tr>
+<td>Amazon Cognito</td>
+<td>Sign-up, sign-in and user directories for your web/mobile apps.</td>
+</tr>
+<tr>
+<td>AWS Directory Service</td>
+<td>Managed Microsoft Active Directory in AWS.</td>
+</tr>
+<tr>
+<td>AWS Resource Access Manager</td>
+<td>Share resources (subnets, etc.) across accounts.</td>
+</tr>
+<tr>
+<td>Amazon Verified Permissions</td>
+<td>Fine-grained app authorization using Cedar policies.</td>
+</tr>
+<tr>
+<td>AWS KMS</td>
+<td>Create and control encryption keys used across AWS.</td>
+</tr>
+<tr>
+<td>AWS CloudHSM</td>
+<td>Dedicated hardware security modules for keys you fully control.</td>
+</tr>
+<tr>
+<td>AWS Secrets Manager</td>
+<td>Store and auto-rotate passwords, API keys and DB credentials.</td>
+</tr>
+<tr>
+<td>AWS Certificate Manager</td>
+<td>Free public TLS certificates, auto-renewed; private CA option.</td>
+</tr>
+<tr>
+<td>AWS Private CA</td>
+<td>Run a managed private certificate authority.</td>
+</tr>
+<tr>
+<td>AWS Payment Cryptography</td>
+<td>Managed cryptography for card-payment processing.</td>
+</tr>
+<tr>
+<td>AWS WAF</td>
+<td>Web application firewall filtering HTTP requests (SQLi, XSS, bots).</td>
+</tr>
+<tr>
+<td>AWS Shield</td>
+<td>DDoS protection (Standard free; Advanced paid).</td>
+</tr>
+<tr>
+<td>AWS Firewall Manager</td>
+<td>Centrally manage WAF, Shield and firewall rules across accounts.</td>
+</tr>
+<tr>
+<td>AWS Network Firewall</td>
+<td>Managed stateful firewall and IPS for VPCs.</td>
+</tr>
+<tr>
+<td>Amazon GuardDuty</td>
+<td>Threat detection from logs, DNS and runtime activity.</td>
+</tr>
+<tr>
+<td>Amazon Inspector</td>
+<td>Scan EC2, containers and Lambda for vulnerabilities.</td>
+</tr>
+<tr>
+<td>Amazon Macie</td>
+<td>Discover and protect sensitive data (PII) in S3.</td>
+</tr>
+<tr>
+<td>Amazon Detective</td>
+<td>Investigate the root cause of security findings.</td>
+</tr>
+<tr>
+<td>AWS Security Hub</td>
+<td>Central dashboard of security findings and best-practice checks.</td>
+</tr>
+<tr>
+<td>Amazon Security Lake</td>
+<td>Centralise security logs in OCSF format in your account.</td>
+</tr>
+<tr>
+<td>AWS Security Incident Response</td>
+<td>Triage and respond to security incidents with AWS help.</td>
+</tr>
+<tr>
+<td>AWS Audit Manager</td>
+<td>Collect evidence for audits against frameworks (SOC 2, PCI). Closed to new customers since Apr 2026.</td>
+</tr>
+<tr>
+<td>AWS Artifact</td>
+<td>Download AWS compliance reports and agreements.</td>
+</tr>
+<tr>
+<td>IAM Access Analyzer</td>
+<td>Find unintended external or unused access in policies.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="analytics">Analytics</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon Athena</td>
+<td>Run serverless SQL queries directly on data in S3.</td>
+</tr>
+<tr>
+<td>Amazon Redshift</td>
+<td>Petabyte-scale cloud data warehouse (provisioned or Serverless).</td>
+</tr>
+<tr>
+<td>Amazon EMR</td>
+<td>Managed Spark, Hive, Presto, Flink and Hadoop clusters (EC2, EKS or Serverless).</td>
+</tr>
+<tr>
+<td>AWS Glue</td>
+<td>Serverless ETL, data catalog and crawlers for preparing data.</td>
+</tr>
+<tr>
+<td>AWS Glue DataBrew</td>
+<td>Visual, no-code data cleaning and normalisation.</td>
+</tr>
+<tr>
+<td>AWS Lake Formation</td>
+<td>Build a governed data lake with fine-grained access control.</td>
+</tr>
+<tr>
+<td>Amazon Kinesis Data Streams</td>
+<td>Ingest and store real-time data streams for custom processing.</td>
+</tr>
+<tr>
+<td>Amazon Data Firehose</td>
+<td>Load streaming data into S3, Redshift, OpenSearch and others with no code.</td>
+</tr>
+<tr>
+<td>Amazon Managed Service for Apache Flink</td>
+<td>Run Flink apps for real-time stream processing.</td>
+</tr>
+<tr>
+<td>Amazon MSK</td>
+<td>Managed Apache Kafka (provisioned or Serverless) plus Kafka Connect.</td>
+</tr>
+<tr>
+<td>Amazon OpenSearch Service</td>
+<td>Search, log analytics and vector search (Elasticsearch fork).</td>
+</tr>
+<tr>
+<td>Amazon QuickSight (Quick Suite)</td>
+<td>BI dashboards and natural-language Q&amp;A over business data.</td>
+</tr>
+<tr>
+<td>Amazon DataZone</td>
+<td>Catalog, discover, share and govern data across an organisation.</td>
+</tr>
+<tr>
+<td>Amazon SageMaker Unified Studio</td>
+<td>One workspace for data, analytics and ML (next-gen SageMaker).</td>
+</tr>
+<tr>
+<td>AWS Clean Rooms</td>
+<td>Analyse combined datasets with partners without sharing raw data.</td>
+</tr>
+<tr>
+<td>AWS Data Exchange</td>
+<td>Find and subscribe to third-party datasets.</td>
+</tr>
+<tr>
+<td>AWS Entity Resolution</td>
+<td>Match and link related records (e.g., customer profiles).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="machine-learning-generative-ai">Machine Learning &amp; Generative AI</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon Bedrock</td>
+<td>API access to foundation models (Claude, Llama, Nova, etc.) plus guardrails and knowledge bases.</td>
+</tr>
+<tr>
+<td>Amazon Bedrock AgentCore</td>
+<td>Deploy and run AI agents securely at scale (runtime, memory, tools, identity).</td>
+</tr>
+<tr>
+<td>Amazon Nova</td>
+<td>Amazon's own family of foundation models (text, image, video, speech).</td>
+</tr>
+<tr>
+<td>Amazon Q Developer</td>
+<td>AI coding assistant for IDEs, CLI and the AWS console. IDE plugins end support Apr 2027.</td>
+</tr>
+<tr>
+<td>Amazon Q Business</td>
+<td>Generative-AI assistant over a company's internal data and apps. Closed to new customers since Jul 2026.</td>
+</tr>
+<tr>
+<td>Kiro</td>
+<td>AWS's agentic, spec-driven AI IDE.</td>
+</tr>
+<tr>
+<td>Amazon SageMaker AI</td>
+<td>Build, train, tune and deploy custom ML models.</td>
+</tr>
+<tr>
+<td>SageMaker HyperPod</td>
+<td>Resilient clusters for training large foundation models.</td>
+</tr>
+<tr>
+<td>SageMaker JumpStart</td>
+<td>Hub of pretrained models and ML solutions to deploy quickly.</td>
+</tr>
+<tr>
+<td>SageMaker Canvas</td>
+<td>No-code ML model building for business analysts.</td>
+</tr>
+<tr>
+<td>Amazon Rekognition</td>
+<td>Image and video analysis: objects, faces, text, moderation.</td>
+</tr>
+<tr>
+<td>Amazon Textract</td>
+<td>Extract text, forms and tables from scanned documents.</td>
+</tr>
+<tr>
+<td>Amazon Comprehend</td>
+<td>NLP: sentiment, entities, key phrases, PII detection.</td>
+</tr>
+<tr>
+<td>Amazon Translate</td>
+<td>Neural machine translation between languages.</td>
+</tr>
+<tr>
+<td>Amazon Transcribe</td>
+<td>Speech-to-text, including call analytics.</td>
+</tr>
+<tr>
+<td>Amazon Polly</td>
+<td>Text-to-speech with lifelike voices.</td>
+</tr>
+<tr>
+<td>Amazon Lex</td>
+<td>Build voice and text chatbots (the engine behind Alexa).</td>
+</tr>
+<tr>
+<td>Amazon Kendra</td>
+<td>Intelligent enterprise search over documents. Closed to new customers since Jul 2026.</td>
+</tr>
+<tr>
+<td>Amazon Personalize</td>
+<td>Real-time product and content recommendations.</td>
+</tr>
+<tr>
+<td>Amazon Comprehend Medical</td>
+<td>Extract medical information from clinical text.</td>
+</tr>
+<tr>
+<td>AWS HealthScribe</td>
+<td>Generate clinical notes from patient–clinician conversations.</td>
+</tr>
+<tr>
+<td>Amazon Augmented AI (A2I)</td>
+<td>Add human review steps to ML predictions. Closed to new customers since Jul 2026.</td>
+</tr>
+<tr>
+<td>AWS Trainium / Inferentia</td>
+<td>AWS-designed chips (EC2 Trn/Inf instances) for cheaper training and inference.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="developer-tools">Developer Tools</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS CLI / SDKs</td>
+<td>Command-line tool and language libraries for calling any AWS API.</td>
+</tr>
+<tr>
+<td>AWS CDK</td>
+<td>Define infrastructure in TypeScript, Python, Java, etc., compiled to CloudFormation.</td>
+</tr>
+<tr>
+<td>AWS SAM</td>
+<td>Framework and CLI for building and testing serverless apps.</td>
+</tr>
+<tr>
+<td>AWS CodeBuild</td>
+<td>Managed build service that compiles code and runs tests.</td>
+</tr>
+<tr>
+<td>AWS CodeDeploy</td>
+<td>Automate deployments to EC2, on-prem servers, Lambda and ECS.</td>
+</tr>
+<tr>
+<td>AWS CodePipeline</td>
+<td>CI/CD pipelines that chain source, build, test and deploy.</td>
+</tr>
+<tr>
+<td>AWS CodeArtifact</td>
+<td>Private package repository for npm, PyPI, Maven, NuGet.</td>
+</tr>
+<tr>
+<td>Amazon CodeCatalyst</td>
+<td>Unified dev workspace: repos, issues, CI/CD, dev environments. Closed to new customers since Nov 2025.</td>
+</tr>
+<tr>
+<td>AWS X-Ray</td>
+<td>Trace requests through distributed apps to find bottlenecks.</td>
+</tr>
+<tr>
+<td>AWS Fault Injection Service</td>
+<td>Run chaos-engineering experiments on AWS workloads.</td>
+</tr>
+<tr>
+<td>AWS Infrastructure Composer</td>
+<td>Visually design serverless architectures and generate IaC. Ends support Sep 2027.</td>
+</tr>
+<tr>
+<td>AWS CloudShell</td>
+<td>Browser-based shell with the AWS CLI preinstalled.</td>
+</tr>
+<tr>
+<td>AWS Device Farm</td>
+<td>Test apps on real phones, tablets and browsers.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="management-governance">Management &amp; Governance</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon CloudWatch</td>
+<td>Metrics, logs, alarms and dashboards for AWS resources and apps.</td>
+</tr>
+<tr>
+<td>AWS CloudTrail</td>
+<td>Record every API call made in your account for auditing.</td>
+</tr>
+<tr>
+<td>AWS Config</td>
+<td>Track resource configuration history and check compliance rules.</td>
+</tr>
+<tr>
+<td>AWS CloudFormation</td>
+<td>Provision AWS resources from JSON/YAML templates (infrastructure as code).</td>
+</tr>
+<tr>
+<td>AWS Systems Manager</td>
+<td>Operate fleets: patching, run commands, Session Manager, Parameter Store.</td>
+</tr>
+<tr>
+<td>AWS Organizations</td>
+<td>Manage many AWS accounts with consolidated billing and policies (SCPs).</td>
+</tr>
+<tr>
+<td>AWS Control Tower</td>
+<td>Set up and govern a secure multi-account landing zone.</td>
+</tr>
+<tr>
+<td>AWS Service Catalog</td>
+<td>Publish approved, pre-configured products for teams to launch.</td>
+</tr>
+<tr>
+<td>AWS Trusted Advisor</td>
+<td>Best-practice checks for cost, security, performance and limits.</td>
+</tr>
+<tr>
+<td>AWS Well-Architected Tool</td>
+<td>Review workloads against AWS's architecture best practices.</td>
+</tr>
+<tr>
+<td>AWS Health</td>
+<td>Alerts about AWS events and outages affecting your resources.</td>
+</tr>
+<tr>
+<td>AWS Resilience Hub</td>
+<td>Assess and improve app resilience against recovery targets.</td>
+</tr>
+<tr>
+<td>AWS License Manager</td>
+<td>Track and enforce software licence usage.</td>
+</tr>
+<tr>
+<td>AWS Launch Wizard</td>
+<td>Guided deployment of SAP, SQL Server and other enterprise apps.</td>
+</tr>
+<tr>
+<td>AWS Resource Explorer</td>
+<td>Search for resources across Regions and accounts.</td>
+</tr>
+<tr>
+<td>AWS User Notifications</td>
+<td>Central place to configure notifications from AWS services.</td>
+</tr>
+<tr>
+<td>Amazon Managed Grafana</td>
+<td>Managed Grafana dashboards for observability data.</td>
+</tr>
+<tr>
+<td>Amazon Managed Service for Prometheus</td>
+<td>Managed Prometheus for container metrics monitoring.</td>
+</tr>
+<tr>
+<td>AWS Chatbot / Amazon Q in chat apps</td>
+<td>Monitor and run AWS commands from Slack, Teams or Chime.</td>
+</tr>
+<tr>
+<td>AWS Management Console</td>
+<td>Web UI for managing every AWS service.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cloud-financial-management">Cloud Financial Management</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS Cost Explorer</td>
+<td>Visualise and analyse spend and usage over time.</td>
+</tr>
+<tr>
+<td>AWS Budgets</td>
+<td>Set cost or usage budgets with alerts and automated actions.</td>
+</tr>
+<tr>
+<td>AWS Billing and Cost Management</td>
+<td>Invoices, payments, cost allocation tags and the bill itself.</td>
+</tr>
+<tr>
+<td>AWS Cost and Usage Reports / Data Exports</td>
+<td>Detailed line-item billing data exported to S3 for analysis.</td>
+</tr>
+<tr>
+<td>AWS Cost Anomaly Detection</td>
+<td>ML alerts for unusual spikes in spend.</td>
+</tr>
+<tr>
+<td>Savings Plans / Reserved Instances</td>
+<td>Commit to usage for 1–3 years in exchange for big discounts.</td>
+</tr>
+<tr>
+<td>AWS Pricing Calculator</td>
+<td>Estimate the monthly cost of an architecture before building it.</td>
+</tr>
+<tr>
+<td>AWS Billing Conductor</td>
+<td>Custom billing views and rates (for resellers or chargeback).</td>
+</tr>
+<tr>
+<td>AWS Marketplace</td>
+<td>Buy and deploy third-party software billed through AWS.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="migration-transfer">Migration &amp; Transfer</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS Application Migration Service (MGN)</td>
+<td>Lift-and-shift servers to EC2 with continuous replication.</td>
+</tr>
+<tr>
+<td>AWS Database Migration Service (DMS)</td>
+<td>Migrate and replicate databases, including across engines.</td>
+</tr>
+<tr>
+<td>AWS Schema Conversion (in DMS)</td>
+<td>Convert schemas and code between database engines.</td>
+</tr>
+<tr>
+<td>AWS DataSync</td>
+<td>Move large file/object datasets between on-prem and AWS storage, fast.</td>
+</tr>
+<tr>
+<td>AWS Transfer Family</td>
+<td>Managed SFTP, FTPS, FTP and AS2 endpoints backed by S3/EFS.</td>
+</tr>
+<tr>
+<td>AWS Transform</td>
+<td>AI agents that modernise .NET, mainframe and VMware workloads.</td>
+</tr>
+<tr>
+<td>AWS Mainframe Modernization</td>
+<td>Refactor or replatform mainframe apps to AWS. Closed to new customers since Nov 2025.</td>
+</tr>
+<tr>
+<td>AWS Application Discovery Service</td>
+<td>Inventory on-prem servers and dependencies to plan a migration. Closed to new customers since Nov 2025.</td>
+</tr>
+<tr>
+<td>Migration Evaluator</td>
+<td>Build a business case for moving to AWS.</td>
+</tr>
+<tr>
+<td>AWS Data Transfer Terminal</td>
+<td>Physical sites where you bring drives to upload data to AWS at high speed.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="frontend-web-mobile">Frontend Web &amp; Mobile</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS Amplify</td>
+<td>Build, host and add backends (auth, data, storage) to web and mobile apps.</td>
+</tr>
+<tr>
+<td>Amazon Location Service</td>
+<td>Maps, geocoding, routing and geofencing for apps.</td>
+</tr>
+<tr>
+<td>AWS End User Messaging</td>
+<td>Send SMS, voice and push messages to users.</td>
+</tr>
+<tr>
+<td>Amazon SES</td>
+<td>Send transactional and marketing email at scale.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="media-services">Media Services</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS Elemental MediaConvert</td>
+<td>File-based video transcoding for broadcast and streaming.</td>
+</tr>
+<tr>
+<td>AWS Elemental MediaLive</td>
+<td>Encode live video streams for broadcast and OTT.</td>
+</tr>
+<tr>
+<td>AWS Elemental MediaPackage</td>
+<td>Package and protect video for delivery to any device.</td>
+</tr>
+<tr>
+<td>AWS Elemental MediaConnect</td>
+<td>Reliable, secure transport of live video into and across AWS.</td>
+</tr>
+<tr>
+<td>AWS Elemental MediaTailor</td>
+<td>Insert personalised ads and build linear channels in streams.</td>
+</tr>
+<tr>
+<td>Amazon IVS</td>
+<td>Low-latency live streaming and real-time video built into apps.</td>
+</tr>
+<tr>
+<td>Amazon Kinesis Video Streams</td>
+<td>Ingest and store video from cameras for analytics and ML.</td>
+</tr>
+<tr>
+<td>AWS Deadline Cloud</td>
+<td>Managed render farm for VFX and animation.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="internet-of-things">Internet of Things</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AWS IoT Core</td>
+<td>Securely connect devices to the cloud over MQTT/HTTP and route their messages.</td>
+</tr>
+<tr>
+<td>AWS IoT Greengrass</td>
+<td>Run Lambda, containers and ML on edge devices, even offline.</td>
+</tr>
+<tr>
+<td>AWS IoT Device Management</td>
+<td>Onboard, organise, monitor and update device fleets remotely.</td>
+</tr>
+<tr>
+<td>AWS IoT Device Defender</td>
+<td>Audit and detect security issues across IoT devices.</td>
+</tr>
+<tr>
+<td>AWS IoT SiteWise</td>
+<td>Collect and analyse industrial equipment data.</td>
+</tr>
+<tr>
+<td>AWS IoT TwinMaker</td>
+<td>Build digital twins of real-world systems.</td>
+</tr>
+<tr>
+<td>AWS IoT FleetWise</td>
+<td>Collect and transfer vehicle data to the cloud. Closed to new customers since Apr 2026.</td>
+</tr>
+<tr>
+<td>AWS IoT ExpressLink</td>
+<td>Pre-certified connectivity modules for adding cloud links to devices.</td>
+</tr>
+<tr>
+<td>FreeRTOS</td>
+<td>Open-source real-time OS for microcontrollers.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="business-applications-end-user-computing">Business Applications &amp; End-User Computing</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon Connect</td>
+<td>Cloud contact center: voice, chat, routing and AI agents.</td>
+</tr>
+<tr>
+<td>Amazon WorkSpaces</td>
+<td>Virtual Windows/Linux desktops streamed to users.</td>
+</tr>
+<tr>
+<td>Amazon WorkSpaces Secure Browser</td>
+<td>Managed, isolated browser for accessing internal web apps. Closing to new customers (announced Sep 2026).</td>
+</tr>
+<tr>
+<td>Amazon AppStream 2.0</td>
+<td>Stream desktop applications to a web browser.</td>
+</tr>
+<tr>
+<td>Amazon WorkMail</td>
+<td>Managed business email and calendars. Ends support Mar 2027.</td>
+</tr>
+<tr>
+<td>AWS Wickr</td>
+<td>End-to-end encrypted messaging and calls for enterprises.</td>
+</tr>
+<tr>
+<td>AWS Supply Chain</td>
+<td>Visibility and planning across inventory and suppliers.</td>
+</tr>
+<tr>
+<td>AWS HealthLake</td>
+<td>Store and analyse health data in FHIR format.</td>
+</tr>
+<tr>
+<td>AWS HealthOmics</td>
+<td>Store and process genomics and other omics data.</td>
+</tr>
+<tr>
+<td>AWS HealthImaging</td>
+<td>Store and serve medical images (DICOM) at scale.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="specialty-quantum-satellite-blockchain-games-communications">Specialty: Quantum, Satellite, Blockchain, Games, Communications</h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>What it's used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon Braket</td>
+<td>Run experiments on quantum computers and simulators.</td>
+</tr>
+<tr>
+<td>AWS Ground Station</td>
+<td>Control satellites and downlink satellite data as a service.</td>
+</tr>
+<tr>
+<td>Amazon Managed Blockchain</td>
+<td>Join or run Ethereum and Hyperledger Fabric networks. Ends support Sep 2027.</td>
+</tr>
+<tr>
+<td>Amazon GameLift Servers</td>
+<td>Host and scale dedicated servers for multiplayer games.</td>
+</tr>
+<tr>
+<td>Amazon GameLift Streams</td>
+<td>Stream games to any browser or device.</td>
+</tr>
+<tr>
+<td>Amazon Chime SDK</td>
+<td>Add audio, video and messaging to your own apps.</td>
+</tr>
+</tbody>
+</table>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            2760 words &middot; 14m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-17.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">14m read</span>
+                <a href="cloud-aws-services-list.html">cloud - aws services list</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="cloud-databricks-services-and-how-they-work.html">cloud - Databricks Services and How They Work</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li>
+                <span class="muted">13m read</span>
+                <a href="delta-lake-performance-optimization-and-maintenance.html">Delta Lake - performance optimization and maintenance</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="python-leetcode.html">python - leetcode</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">12m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">12m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 17 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>
