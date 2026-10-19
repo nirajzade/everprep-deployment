@@ -34,7 +34,7 @@
 
     <header>
         <h1>spark - theory</h1>
-        <p class="meta">12m read &middot; 2478 words</p>
+        <p class="meta">12m read &middot; 2471 words</p>
     </header>
 
     
@@ -45,23 +45,28 @@
 <ul>
     <li><a href="#theory">Theory</a>
 <ul>
-    <li><a href="#todo-5-stages-of-generation">todo - 5 stages of generation</a></li>
+    <li><a href="#todo-spark-architecture">TODO: spark architecture</a></li>
+    <li><a href="#todo-5-stages-of-generation">TODO: 5 stages of generation</a></li>
     <li><a href="#mergeschema-vs-overwriteschema">MergeSchema vs OverwriteSchema</a></li>
     <li><a href="#checkpointing">Checkpointing</a></li>
-    <li><a href="#udf">UDF</a></li>
+    <li><a href="#udf">UDF</a>
+<ul>
+    <li><a href="#why-are-udfs-slow">Why are UDFs slow?</a></li>
+</ul></li>
     <li><a href="#reducebykey-vs-groupbykey">reduceByKey vs groupByKey</a></li>
 </ul></li>
     <li><a href="#delta-lake">Delta lake</a>
 <ul>
     <li><a href="#schema-evolution">Schema evolution</a></li>
-    <li><a href="#optimization">Optimization</a>
-<ul>
-    <li><a href="#partition-zorder">partition+zorder</a></li>
-</ul></li>
+    <li><a href="#optimization">Optimization</a></li>
+    <li><a href="#mergeschema">MergeSchema</a></li>
 </ul></li>
     <li><a href="#target-file-sizes">Target file sizes</a></li>
     <li><a href="#optimization-2">Optimization</a>
 <ul>
+    <li><a href="#projection-pruning-predicate-pushdown">Projection pruning, predicate pushdown</a></li>
+    <li><a href="#join-optimization">Join optimization</a></li>
+    <li><a href="#cache-and-persist">Cache and persist</a></li>
     <li><a href="#aqe">AQE</a>
 <ul>
     <li><a href="#what-it-does">What it does</a>
@@ -73,10 +78,7 @@
     <li><a href="#why-is-aqe-better-than-static-optimization">Why is AQE better than static optimization</a></li>
     <li><a href="#when-aqe-doesn-t-work">When AQE doesn&#39;t work</a></li>
 </ul></li>
-    <li><a href="#projection-pruning-predicate-pushdown">Projection pruning, predicate pushdown</a></li>
-    <li><a href="#join-optimization">Join optimization</a></li>
-    <li><a href="#cache-and-persist">Cache and persist</a></li>
-    <li><a href="#driver-oom-vs-executor-oom">driver oom vs executor oom</a></li>
+    <li><a href="#finding-driver-oom-vs-executor-oom">Finding driver oom vs executor oom</a></li>
 </ul></li>
     <li><a href="#optimization-in-databricks">Optimization in databricks</a></li>
     <li><a href="#scenarios">Scenarios</a>
@@ -113,11 +115,10 @@
 <li>how they work</li>
 <li>why are they slow (python tax)</li>
 </ul></li>
-<li><p>row by row vs vectored execution</p></li>
-<li><p>reducebykey vs groupbykey</p></li>
 </ul>
 <h1 id="theory">Theory</h1>
-<h2 id="todo-5-stages-of-generation">todo - 5 stages of generation</h2>
+<h2 id="todo-spark-architecture">TODO: spark architecture</h2>
+<h2 id="todo-5-stages-of-generation">TODO: 5 stages of generation</h2>
 <h2 id="mergeschema-vs-overwriteschema">MergeSchema vs OverwriteSchema</h2>
 <p><strong>Overwriteschema</strong> - will delete existing schema, and use the new incoming schema only. May corrupt existing table. Older data remains recoverable through time travel.</p>
 <p><strong>MergeSchema</strong> - leads to schema evolution. Used when appending data to an existing location. Combines existing data with new data.</p>
@@ -191,7 +192,8 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>Reference update - future operation on df will point directly to files on disk, ignoring original files and transformations</li>
 </ul>
 <h2 id="udf">UDF</h2>
-<p>Why are UDFs slow? because of the serialization bottleneck</p>
+<h3 id="why-are-udfs-slow">Why are UDFs slow?</h3>
+<p>Because of the serialization bottleneck</p>
 <p>Moving data between jvm (spark) and python is very expensive</p>
 <p>To run python code on data:</p>
 <ul>
@@ -264,14 +266,15 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>z-order - colocates related value, to improve data skipping and joins</li>
 </ul>
 <p>Optimize data layout using <code>OPTIMIZE</code> and liquid clustering.</p>
-<h3 id="partition-zorder">partition+zorder</h3>
-<p>Use when </p>
+<p><strong>partition+zorder</strong></p>
+<p>Use when:</p>
 <ul>
 <li>on an older version of delta that doesn't support liquid clustering.</li>
 <li>data is static, only needs to be optmized once</li>
 <li>filtering is done only on one or two specific columns</li>
 </ul>
-<p><strong>MergeSchema</strong> - leads to schema evolution. Used when appending data to an existing location. Combines existing data with new data.</p>
+<h2 id="mergeschema">MergeSchema</h2>
+<p>Leads to schema evolution. Used when appending data to an existing location. Combines existing data with new data.</p>
 <ul>
 <li>Column added
 <ul>
@@ -413,6 +416,66 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>Data serialization</li>
 <li>Catalyst optimizer, tungsten</li>
 </ul>
+<h2 id="projection-pruning-predicate-pushdown">Projection pruning, predicate pushdown</h2>
+<p>Cut down the data as much as possible before processing it.</p>
+<p>The words come from relational algebra</p>
+<ul>
+<li>Project = select column</li>
+<li>Predicate = filter condition</li>
+</ul>
+<p><strong>Projection pruning</strong></p>
+<p>Reduce the number of columns read.<br/>
+Spark does this automatically via catalyst optimizer. If a column isn't used in any calculation, then it is simply not even read.</p>
+<p><strong>Predicate pushdown</strong></p>
+<p>Reduce the number of rows read, by pushing filters as close to data source as possible. Also done automatically by catalyst.</p>
+<p>Shows up in df.explain(True) as:</p>
+<pre><code>PushedFilters: [GreaterThan(salary,100000)]
+</code></pre>
+<p>Pushdown depends on the data source. It won't work when filters use:</p>
+<ul>
+<li>UDFs</li>
+<li>complex expressions
+<ul>
+<li>filtering after aggregation (eg - <code>HAVING COUNT(*) &gt; 100;</code>)</li>
+<li>derives values <code>WHERE amount * 12 &gt; 1000000;</code></li>
+</ul></li>
+</ul>
+<h2 id="join-optimization">Join optimization</h2>
+<p><strong>USE BUCKETING</strong></p>
+<p>Bucketing improves joins by pre-organizing data into buckets based on a join key, reducing or eliminating the need for a full shuffle during the join. </p>
+<p>If the bucketed column is also the basis of the join, then the related rows are already within the same executor. This eliminates the need of a data shuffle.</p>
+<p><strong>FORCE BROADCAST JOIN</strong> </p>
+<p>Using hint when the df is larger than autobroadcast threshold, but will still fit in memory.</p>
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">broadcast</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">large_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+    <span class="n">broadcast</span><span class="p">(</span><span class="n">small_df</span><span class="p">),</span>
+    <span class="s2">"customer_id"</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+<h2 id="cache-and-persist">Cache and persist</h2>
+<p>Caching will cause AQE to fail.<br/>
+Use it anyways when</p>
+<ul>
+<li>Recomputation is expensive</li>
+<li>The same df is used for many different downstream tasks, so repeating the lineage is necessary</li>
+</ul>
+<p>AQE looks at statistics of data as it is written to shuffle files.</p>
+<p>So it doesn't work well if data is cached, because the current state of the df is frozen. So AQE cannot optimize it.</p>
+<p>Once data is cached, its execution plan in considered to be fixed. So AQE cannot modify it further.</p>
+<p>AQE's effectiveness changes based on where data is stored. The shuffle data write has varying levels of AQE awareness:</p>
+<ul>
+<li>DISK_ONLY - full awareness. AQE handles everything perfectly. Can coalesce and change join type.</li>
+<li>MEMORY<em>AND</em>DISK - partial awareness. Cannot coalesce, can change join type</li>
+<li>Persisted delta tables - unaware during write</li>
+</ul>
+<p><strong>WHAT TO DO?</strong></p>
+<ul>
+<li>Let AQE optimize before cache. Force a wide transformation before caching using an explicit repartition() etc.</li>
+<li><code>.unpersist()</code> dataframes as soon as their use is over</li>
+</ul>
 <h2 id="aqe">AQE</h2>
 <p>Is a runtime optmizer for batch optimization tool where data is large. Won't work for streaming pipelines.</p>
 <p>Does 3 things:</p>
@@ -513,67 +576,7 @@ partition_size &gt; skewedPartitionThresholdInBytes
 <li>threshold mismatches (config issues - workload didn't meet thresholds of skew or small)</li>
 <li>UDFs (non vectorized) are used</li>
 </ul>
-<h2 id="projection-pruning-predicate-pushdown">Projection pruning, predicate pushdown</h2>
-<p>Cut down the data as much as possible before processing it.</p>
-<p>The words come from relational algebra</p>
-<ul>
-<li>Project = select column</li>
-<li>Predicate = filter condition</li>
-</ul>
-<p><strong>Projection pruning</strong></p>
-<p>Reduce the number of columns read.<br/>
-Spark does this automatically via catalyst optimizer. If a column isn't used in any calculation, then it is simply not even read.</p>
-<p><strong>Predicate pushdown</strong></p>
-<p>Reduce the number of rows read, by pushing filters as close to data source as possible. Also done automatically by catalyst.</p>
-<p>Shows up in df.explain(True) as:</p>
-<pre><code>PushedFilters: [GreaterThan(salary,100000)]
-</code></pre>
-<p>Pushdown depends on the data source. It won't work when filters use:</p>
-<ul>
-<li>UDFs</li>
-<li>complex expressions
-<ul>
-<li>filtering after aggregation (eg - <code>HAVING COUNT(*) &gt; 100;</code>)</li>
-<li>derives values <code>WHERE amount * 12 &gt; 1000000;</code></li>
-</ul></li>
-</ul>
-<h2 id="join-optimization">Join optimization</h2>
-<p><strong>USE BUCKETING</strong></p>
-<p>Bucketing improves joins by pre-organizing data into buckets based on a join key, reducing or eliminating the need for a full shuffle during the join. </p>
-<p>If the bucketed column is also the basis of the join, then the related rows are already within the same executor. This eliminates the need of a data shuffle.</p>
-<p><strong>FORCE BROADCAST JOIN</strong> </p>
-<p>Using hint when the df is larger than autobroadcast threshold, but will still fit in memory.</p>
-<div class="codehilite">
-<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">broadcast</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">large_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-    <span class="n">broadcast</span><span class="p">(</span><span class="n">small_df</span><span class="p">),</span>
-    <span class="s2">"customer_id"</span>
-<span class="p">)</span>
-</code></pre>
-</div>
-<h2 id="cache-and-persist">Cache and persist</h2>
-<p>Caching will cause AQE to fail.<br/>
-Use it anyways when</p>
-<ul>
-<li>Recomputation is expensive</li>
-<li>The same df is used for many different downstream tasks, so repeating the lineage is necessary</li>
-</ul>
-<p>AQE looks at statistics of data as it is written to shuffle files.</p>
-<p>So it doesn't work well if data is cached, because the current state of the df is frozen. So AQE cannot optimize it.</p>
-<p>Once data is cached, its execution plan in considered to be fixed. So AQE cannot modify it further.</p>
-<p>AQE's effectiveness changes based on where data is stored. The shuffle data write has varying levels of AQE awareness:</p>
-<ul>
-<li>DISK_ONLY - full awareness. AQE handles everything perfectly. Can coalesce and change join type.</li>
-<li>MEMORY<em>AND</em>DISK - partial awareness. Cannot coalesce, can change join type</li>
-<li>Persisted delta tables - unaware during write</li>
-</ul>
-<p><strong>WHAT TO DO?</strong></p>
-<ul>
-<li>Let AQE optimize before cache. Force a wide transformation before caching using an explicit repartition() etc.</li>
-<li><code>.unpersist()</code> dataframes as soon as their use is over</li>
-</ul>
-<h2 id="driver-oom-vs-executor-oom">driver oom vs executor oom</h2>
+<h2 id="finding-driver-oom-vs-executor-oom">Finding driver oom vs executor oom</h2>
 <p>Driver OOM symptoms:</p>
 <ul>
 <li>Error messages - <code>java.lang.OutOfMemoryError: Java heap space</code> or <code>GC overhead limit exceeded</code></li>
@@ -652,9 +655,9 @@ Use it anyways when</p>
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            2478 words &middot; 12m read<br>
+            2471 words &middot; 12m read<br>
             Written as a markdown note in Obsidian.
-            Built into this page by a Python script on 2026-10-18.
+            Built into this page by a Python script on 2026-10-19.
         </footer>
     </article>
 
@@ -681,6 +684,11 @@ Use it anyways when</p>
             <li>
                 <span class="muted">3m read</span>
                 <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">4m read</span>
+                <a href="data-modelling.html">data modelling</a>
             </li>
             
             <li>
@@ -724,7 +732,7 @@ Use it anyways when</p>
 
     <footer class="site-footer">
         <p><a href="index.html">&larr; everprep</a></p>
-        <p>Generated on 18 Oct 2026 from markdown notes.</p>
+        <p>Generated on 19 Oct 2026 from markdown notes.</p>
     </footer>
 
 </div>
