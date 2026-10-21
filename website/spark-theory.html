@@ -34,7 +34,7 @@
 
     <header>
         <h1>spark - theory</h1>
-        <p class="meta">12m read &middot; 2471 words</p>
+        <p class="meta">14m read &middot; 2851 words</p>
     </header>
 
     
@@ -49,6 +49,11 @@
     <li><a href="#todo-5-stages-of-generation">TODO: 5 stages of generation</a></li>
     <li><a href="#mergeschema-vs-overwriteschema">MergeSchema vs OverwriteSchema</a></li>
     <li><a href="#checkpointing">Checkpointing</a></li>
+    <li><a href="#jobs-stages-tasks">Jobs, Stages, Tasks</a></li>
+    <li><a href="#parallelism">Parallelism</a>
+<ul>
+    <li><a href="#parauet-files">Parauet files</a></li>
+</ul></li>
     <li><a href="#udf">UDF</a>
 <ul>
     <li><a href="#why-are-udfs-slow">Why are UDFs slow?</a></li>
@@ -190,6 +195,36 @@ Persist caches the computed data but keeps the lineage.</p>
 <li>Write to storage - Once df is computed, it is written to physical files on disk</li>
 <li>Lineage truncation - delete logical plan that led upto that dataframe</li>
 <li>Reference update - future operation on df will point directly to files on disk, ignoring original files and transformations</li>
+</ul>
+<h2 id="jobs-stages-tasks">Jobs, Stages, Tasks</h2>
+<p>Spark breaks your work into a three-level hierarchy: job → stages → tasks. Each level is defined by a different trigger.</p>
+<p>Interview one-liner: </p>
+<ul>
+<li>an action triggers a job</li>
+<li>shuffles split it into stages</li>
+<li>partitions decide the number of tasks</li>
+</ul>
+<p>Job — created every time you call an action (count(), collect(), show(), write). Transformations like filter or select are lazy and create nothing until an action fires. One action usually means one job, though some actions spawn extra ones (e.g. schema inference on read.csv, or the sampling job behind sortBy).</p>
+<p>Stage — Spark's DAG scheduler cuts each job into stages at shuffle boundaries. Narrow transformations (map, filter, withColumn) need no data movement, so they're pipelined together in one stage. Wide transformations (groupBy, join, repartition, distinct) need data redistributed across executors, which forces a new stage. So: number of stages ≈ number of shuffles + 1. Intermediate stages are ShuffleMapStages; the last one is the ResultStage.</p>
+<p>Task — the actual unit of work sent to an executor core. Each stage runs one task per partition, all executing the same code on different slices of data. Stage 0's task count comes from your input partitions (e.g. file splits); after a shuffle it's spark.sql.shuffle.partitions (default 200, often coalesced by AQE).</p>
+<p>Tasks in a stage run in parallel, but a stage after a shuffle waits for the previous stage to finish — which is why too few partitions underuse your cluster and skewed partitions create straggler tasks. </p>
+<h2 id="parallelism">Parallelism</h2>
+<h3 id="parauet-files">Parauet files</h3>
+<p>Read granularity is at row group level.</p>
+<ul>
+<li>The file has physical boundaries via row groups.</li>
+<li>While reading, spark makes virtual partitions based on <code>spark.sql.files.maxPartitionBytes</code>.</li>
+<li>Spark cannot break row groups. So it decides which partition a row group belongs to, based on the partition where the row group's middle byte falls.</li>
+<li>1 partition is read by 1 task</li>
+</ul>
+<p>Consequences: </p>
+<ul>
+<li>When row group size is small and partition size is large, multiple row groups will be read as part of a single partition</li>
+<li>When row group size is large, and partition size is small, splitting a file into more partitions than row groups will result in many empty partitions, with no row group to process within them</li>
+</ul>
+<p><img alt="" src="spark%20-%20theory-1792552594581.webp"/></p>
+<ul>
+<li>Github issue: <a href="https://github.com/apache/spark/issues/55747">Is Spark limited to split the Parquet read granularity by Row Group level only?</a></li>
 </ul>
 <h2 id="udf">UDF</h2>
 <h3 id="why-are-udfs-slow">Why are UDFs slow?</h3>
@@ -655,9 +690,9 @@ partition_size &gt; skewedPartitionThresholdInBytes
 
         <footer class="colophon">
             <span class="colophon-title">Colophon</span>
-            2471 words &middot; 12m read<br>
+            2851 words &middot; 14m read<br>
             Written as a markdown note in Obsidian.
-            Built into this page by a Python script on 2026-10-19.
+            Built into this page by a Python script on 2026-10-21.
         </footer>
     </article>
 
@@ -697,6 +732,16 @@ partition_size &gt; skewedPartitionThresholdInBytes
             </li>
             
             <li>
+                <span class="muted">7m read</span>
+                <a href="databricks.html">databricks</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="delta-lake.html">Delta lake</a>
+            </li>
+            
+            <li>
                 <span class="muted">13m read</span>
                 <a href="delta-lake-performance-optimization-and-maintenance.html">Delta Lake - performance optimization and maintenance</a>
             </li>
@@ -717,7 +762,7 @@ partition_size &gt; skewedPartitionThresholdInBytes
             </li>
             
             <li class="is-current">
-                <span class="muted">12m read</span>
+                <span class="muted">14m read</span>
                 <a href="spark-theory.html">spark - theory</a>
             </li>
             
@@ -737,7 +782,7 @@ partition_size &gt; skewedPartitionThresholdInBytes
 
     <footer class="site-footer">
         <p><a href="index.html">&larr; everprep</a></p>
-        <p>Generated on 19 Oct 2026 from markdown notes.</p>
+        <p>Generated on 21 Oct 2026 from markdown notes.</p>
     </footer>
 
 </div>

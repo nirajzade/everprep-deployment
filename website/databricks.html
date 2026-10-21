@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>databricks - everprep</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/minimal.css">
+    <link rel="stylesheet" href="static/codehilite.css">
+    <link rel="stylesheet" href="static/everprep.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="static/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/favicon/favicon-16x16.png">
+    <link rel="mask-icon" href="static/favicon/safari-pinned-tab.svg" color="#5bbad5">
+</head>
+
+<body>
+
+<div class="progress" aria-hidden="true"><span></span></div>
+
+<div class="page article-layout">
+
+    <nav class="site-nav">
+        <div class="masthead">
+            <a class="site-name" href="index.html">everprep</a>
+        </div>
+        <p class="tagline">~ everprep. everready. ~</p>
+    </nav>
+
+    <header>
+        <h1>databricks</h1>
+        <p class="meta">7m read &middot; 1495 words</p>
+    </header>
+
+    
+    <nav class="toc box" aria-label="Table of contents">
+        <h2 class="box-title">Contents</h2>
+        <div class="toc-scroll">
+            
+<ul>
+    <li><a href="#all-platform-features">All platform features</a>
+<ul>
+    <li><a href="#storage-and-table-formats">Storage and table formats</a></li>
+    <li><a href="#ingestion-lakeflow-connect">Ingestion (Lakeflow Connect)</a></li>
+    <li><a href="#transformation-lakeflow-spark-declarative-pipelines-formerly-dlt">Transformation (Lakeflow Spark Declarative Pipelines, formerly DLT)</a></li>
+    <li><a href="#orchestration-lakeflow-jobs">Orchestration (Lakeflow Jobs)</a></li>
+    <li><a href="#compute">Compute</a></li>
+    <li><a href="#governance-unity-catalog">Governance (Unity Catalog)</a></li>
+    <li><a href="#federation-and-sharing">Federation and sharing</a></li>
+    <li><a href="#data-warehousing-and-bi-databricks-sql">Data warehousing and BI (Databricks SQL)</a></li>
+    <li><a href="#operational-database-lakebase">Operational database (Lakebase)</a></li>
+    <li><a href="#ai-and-ml-agent-bricks-formerly-mosaic-ai">AI and ML (Agent Bricks, formerly Mosaic AI)</a></li>
+    <li><a href="#ai-assistants-the-genie-family">AI assistants (the Genie family)</a></li>
+    <li><a href="#apps-and-developer-tools">Apps and developer tools</a></li>
+    <li><a href="#security-and-administration">Security and administration</a></li>
+    <li><a href="#industry-solutions-and-editions">Industry solutions and editions</a></li>
+</ul></li>
+</ul>
+        </div>
+    </nav>
+    
+
+    <article class="prose box">
+<h1 id="all-platform-features">All platform features</h1>
+<h2 id="storage-and-table-formats">Storage and table formats</h2>
+<ul>
+<li><strong>Delta Lake</strong>: ACID transactions, time travel, MERGE, schema enforcement and evolution, constraints, and identity and generated columns`</li>
+<li><strong>Delta optimizations</strong>: Change Data Feed, deletion vectors, liquid clustering, Z-ORDER, OPTIMIZE and VACUUM, predictive optimization, type widening, row tracking, and VARIANT type`</li>
+<li><strong>Shallow and deep clone</strong>`</li>
+<li><strong>UniForm</strong>: lets other engines read Delta tables as Iceberg`</li>
+<li><strong>Managed and foreign Apache Iceberg tables</strong>: Unity Catalog managed Iceberg tables, foreign Iceberg tables, and Iceberg v3 features are generally available. With v3, the physical Parquet data files on disk are now shared between Delta and Iceberg tables. <a href="https://docs.databricks.com/aws/en/release-notes/product/">databricks</a><a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Catalog commits and multi-table transactions</strong>: catalog commits expand managed table interoperability and unlock multi-statement, multi-table transactions <a href="https://docs.databricks.com/aws/ja/release-notes/product/2026/may">databricks</a>`</li>
+<li><strong>Volumes</strong>: governed storage for non-tabular files`</li>
+<li><strong>Workspace files</strong>`</li>
+<li><strong>DBFS</strong> (legacy)`</li>
+</ul>
+<h2 id="ingestion-lakeflow-connect">Ingestion (Lakeflow Connect)</h2>
+<ul>
+<li><strong>Managed connectors</strong>: relational databases like SQL Server and PostgreSQL, or SaaS platforms like Salesforce, plus Workday, ServiceNow, Google Analytics, SharePoint, NetSuite and more <a href="https://www.jrvs.ca/blog/databricks-h1-2025-key-feature-announcements-and-where-they-stand-today">jrvs</a>`</li>
+<li><strong>Over 100 connectors</strong>: including community-developed connectors and options for customers to build their own <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Query-based connectors</strong>: for example, an Oracle connector that provides incremental loads via a cursor column (and supports SCD1/SCD2 and soft/hard deletes), but it’s not log-based CDC <a href="https://community.databricks.com/t5/administration-architecture/integration-patterns-with-oracle-database/m-p/155179/highlight/true">databricks</a>`</li>
+<li><strong>Zerobus Ingest</strong>: a push-based API that handles high-rate, small-row event data and lands it directly into open Delta tables, with Kafka-compatible APIs <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Auto Loader</strong>: incremental file ingestion from S3, ADLS and GCS`</li>
+<li><strong>COPY INTO</strong>, <code>read_files</code>, and file upload UI`</li>
+<li><strong>File events</strong>: enabled by default on new external locations <a href="https://docs.databricks.com/aws/ja/release-notes/product">databricks</a>`</li>
+<li><strong>Streaming sources</strong>: Kafka, Kinesis, Event Hubs and Pub/Sub`</li>
+<li><strong>Lakeflow Connect Free Tier</strong>`</li>
+</ul>
+<h2 id="transformation-lakeflow-spark-declarative-pipelines-formerly-dlt">Transformation (Lakeflow Spark Declarative Pipelines, formerly DLT)</h2>
+<ul>
+<li><strong>Streaming tables and materialized views</strong>, including incremental refresh`</li>
+<li><strong>Expectations</strong>: built-in data quality rules`</li>
+<li><strong>AUTO CDC</strong>: replaces Apply_Changes for SCD1 or SCD2 operations <a href="https://www.jrvs.ca/blog/databricks-h1-2025-key-feature-announcements-and-where-they-stand-today">jrvs</a>`</li>
+<li><strong>AUTO CDC FROM SNAPSHOT</strong>: CDC when the source only provides snapshots`</li>
+<li><strong>Flows, append flows and sinks</strong>`</li>
+<li><strong>Real-Time Mode</strong>: achieves as low as 5 ms latency for time-critical workloads <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Open-source Spark Declarative Pipelines</strong>: DLT becomes an open Apache Spark standard <a href="https://github.com/amit10may/databricks-ai-summit-2026">github</a>`</li>
+<li><strong>Lakeflow Designer</strong>: no-code, natural-language pipeline builder that generates real Spark Declarative Pipelines code`</li>
+<li><strong>Visual data prep</strong>`</li>
+<li><strong>Structured Streaming</strong>: stateful processing (transformWithState) and watermarks`</li>
+</ul>
+<h2 id="orchestration-lakeflow-jobs">Orchestration (Lakeflow Jobs)</h2>
+<ul>
+<li><strong>Task types</strong>: notebooks, SQL, pipelines, dbt, Python wheels, JARs, run-job and more`</li>
+<li><strong>Triggers</strong>: schedule, file arrival, table update and continuous`</li>
+<li><strong>Control flow</strong>: conditional (if/else) tasks, for-each loops, job parameters, repair and rerun`</li>
+<li><strong>Serverless jobs</strong>`</li>
+<li><strong>Integrations</strong>: more than 50 integrations for orchestrating external systems <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Unified run tracking</strong>: filter all your pipeline runs by status, time, run-as user, run ID, and error codes in real time <a href="https://docs.databricks.com/aws/en/release-notes/product/2026/may">databricks</a>`</li>
+</ul>
+<h2 id="compute">Compute</h2>
+<ul>
+<li><strong>Cluster types</strong>: all-purpose, job and pools; cluster policies, autoscaling, spot instances and init scripts`</li>
+<li><strong>Serverless compute</strong> for notebooks, jobs, pipelines and SQL`</li>
+<li><strong>Databricks Runtime and ML Runtime</strong>, including LTS versions`</li>
+<li><strong>Photon</strong>: vectorized query engine`</li>
+<li><strong>SQL warehouses</strong>: Classic, Pro and Serverless`</li>
+<li><strong>Lakehouse//RT</strong>: a new SQL warehouse type in Databricks, starting with read-only analytical workloads, powered by the new Reyden engine (Beta) <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>AI Runtime</strong>: serverless GPU compute for deep learning and LLM training with multi-node support <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Databricks Sandbox</strong>: isolated virtual machines with downscoped Unity Catalog access for running agent code <a href="https://addepto.com/blog/databricks-data-ai-summit-2026-new-features-explained/">addepto</a>`</li>
+</ul>
+<h2 id="governance-unity-catalog">Governance (Unity Catalog)</h2>
+<ul>
+<li><strong>Organization</strong>: three-level namespace (catalog.schema.table), metastores, managed and external tables, storage credentials and external locations`</li>
+<li><strong>Access control</strong>: grants, row filters and column masks, and attribute-based access control (tag-driven policies)`</li>
+<li><strong>Observability</strong>: column-level lineage, audit logs, system tables (billing, lineage, query and Lakeflow), tags and data classification`</li>
+<li><strong>Data quality monitoring</strong> (formerly Lakehouse Monitoring), including anomaly detection`</li>
+<li><strong>Open access</strong>: Iceberg REST catalog, credential vending and open-source Unity Catalog`</li>
+<li><strong>Business semantics</strong>: Metric Views and Metrics, Domains, and Business Glossary. Per the summit coverage, Domains (Public Preview) organize data and AI assets into business-aligned categories. <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Unity AI Gateway</strong>: spend caps, smart routing, contextual security policies, MCP server registry, agent tracing via MLflow <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+</ul>
+<h2 id="federation-and-sharing">Federation and sharing</h2>
+<ul>
+<li><p><strong>Lakehouse Federation</strong>: allows you to query external data sources without moving your data <a href="https://docs.databricks.com/aws/ingestion/lakeflow-connect">databricks</a>`</p>
+<ul>
+<li><p>Query federation to PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, Redshift, BigQuery, Synapse, Teradata and others. It pushes queries down via JDBC to the foreign database. <a href="https://community.databricks.com/t5/administration-architecture/integration-patterns-with-oracle-database/m-p/155179/highlight/true">databricks</a>`</p></li>
+<li><p>Catalog federation for Hive metastore, AWS Glue and Snowflake`</p></li>
+</ul></li>
+<li><p><strong>Delta Sharing</strong>: Databricks-to-Databricks and open sharing`</p></li>
+<li><strong>OpenSharing</strong>: Superset of Delta Sharing extending the protocol to AI assets including agents, models and skills; on-premises storage support included <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Databricks Marketplace</strong>: data, models, notebooks and apps`</li>
+<li><strong>Clean Rooms</strong>: privacy-safe collaboration on shared data`</li>
+</ul>
+<h2 id="data-warehousing-and-bi-databricks-sql">Data warehousing and BI (Databricks SQL)</h2>
+<ul>
+<li><strong>Querying</strong>: SQL editor (with dynamic parameters), saved queries, alerts, query history and query profile`</li>
+<li><strong>SQL language features</strong>: SQL scripting, stored procedures, temp tables and collations`</li>
+<li><strong>AI/BI</strong>: AI/BI Dashboards and Genie spaces (natural language to SQL)`</li>
+<li><strong>AI Functions</strong>: <code>ai_query</code>, <code>ai_extract</code>, <code>ai_classify</code>, <code>ai_parse_document</code>, <code>ai_forecast</code> and more. ai<em>extract is now generally available, and ai</em>classify is now generally available. <a href="https://docs.databricks.com/aws/en/release-notes/product/">databricks</a>`</li>
+<li><strong>Office and BI integrations</strong>: Excel Add-in, Google Sheets connector, and Power BI and Tableau integrations`</li>
+<li><strong>Lakebridge</strong>: AI-powered, free data warehouse migration tool <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+</ul>
+<h2 id="operational-database-lakebase">Operational database (Lakebase)</h2>
+<ul>
+<li><strong>Managed Postgres</strong>: Lakebase combines familiar Postgres with the scalability and economics of open lakehouse storage. It now supports Postgres 18. <a href="https://databricks.com/blog/whats-new-azure-databricks-fabcon-2026-lakebase-lakeflow-and-genie">databricks</a>`</li>
+<li><strong>Autoscaling and scale-to-zero</strong>: new Lakebase Autoscaling instances now scale to zero by default after 24 hours of inactivity <a href="https://docs.databricks.com/aws/en/release-notes/product/2026/may">databricks</a>`</li>
+<li><strong>Branching, snapshots and instant rollback</strong>`</li>
+<li><strong>Disaster recovery</strong>: high availability and cross-cloud, cross-region disaster recovery`</li>
+<li><strong>Sync between Lakebase and the lakehouse</strong>: synced tables (reverse ETL from Delta), and Lakehouse Sync and Change Data Feed (Public Preview)`</li>
+<li><strong>Lakebase Search</strong>: hybrid vector and full-text retrieval (Beta)`</li>
+<li><strong>OpenTelemetry export</strong>: export Lakebase Postgres metrics and logs to any OTLP-compatible observability backend <a href="https://docs.databricks.com/aws/en/release-notes/product/2026/april">databricks</a>`</li>
+<li><strong>LTAP</strong>: pairs Lakebase (transactions) with the lakehouse (analytics) on one copy of open-format data. Announced, coming soon. <a href="https://addepto.com/blog/databricks-data-ai-summit-2026-new-features-explained/">addepto</a>`</li>
+</ul>
+<h2 id="ai-and-ml-agent-bricks-formerly-mosaic-ai">AI and ML (Agent Bricks, formerly Mosaic AI)</h2>
+<ul>
+<li><strong>Agent Bricks</strong>: expanded beyond declarative agents to serve as the umbrella for all Databricks AI capabilities <a href="https://docs.databricks.com/aws/fr/release-notes/product/2026/march">databricks</a>`</li>
+<li><p><strong>Prebuilt agents</strong>:`</p>
+<ul>
+<li><p>Knowledge Assistant: a document Q&amp;A agent with citations`</p></li>
+<li><p>Supervisor Agent: multi-agent orchestration that can use UC functions, tables, vector indexes, MCP servers, web search and other agents as tools`</p></li>
+<li><p>Information Extraction and Document Intelligence`</p></li>
+</ul></li>
+<li><p><strong>Agent infrastructure</strong>:`</p>
+<ul>
+<li><p>Agent Framework`</p></li>
+<li><p>Agent Memory Service: managed agent memory built on Lakebase, with short-term (session) and long-term (cross-session) tiers <a href="https://addepto.com/blog/databricks-data-ai-summit-2026-new-features-explained/">addepto</a>`</p></li>
+<li><p>Managed and external MCP servers`</p></li>
+</ul></li>
+<li><p><strong>Model Serving</strong>: custom models, Foundation Model APIs (pay-per-token and provisioned throughput), external models, and models from OpenAI, Anthropic, Gemini, Qwen, Kimi and Grok`</p></li>
+<li><strong>Vector Search</strong>`</li>
+<li><strong>Features</strong>: feature engineering in Unity Catalog, online feature serving and online tables`</li>
+<li><strong>Managed MLflow 3</strong>: experiment tracking, model registry in Unity Catalog, tracing, evaluation and judges, and prompt registry`</li>
+<li><strong>Other ML tools</strong>: AutoML, AI Playground and fine-tuning`</li>
+<li><strong>Omnigent</strong>: Open source meta-harness that sits above existing agent frameworks, enabling agent composition, collaboration and centralized governance <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+</ul>
+<h2 id="ai-assistants-the-genie-family">AI assistants (the Genie family)</h2>
+<ul>
+<li><strong>Databricks Assistant</strong>: includes Agent Mode, and users can now create skills to extend Databricks Assistant in agent mode <a href="https://docs.azure.cn/en-us/databricks/release-notes/product/2026/january">azure</a>`</li>
+<li><strong>Genie Code</strong>: AI coding agent built for data engineering and ML workflows, plus an ML-specific variant <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Genie ZeroOps</strong>: Autonomous background agent that monitors pipelines, detects failures, investigates root causes and proposes fixes <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><p><strong>Genie One</strong>: an AI coworker for business users. Related pieces:`</p>
+<ul>
+<li><p>Genie Agents: reusable agents saved from Genie One conversations`</p></li>
+<li><p>Genie Ontology: the context layer behind Genie One`</p></li>
+</ul></li>
+<li><p><strong>Databricks One</strong>: a simplified interface for business users`</p></li>
+<li><strong>Genie in Microsoft Teams, M365 Copilot and Slack</strong>`</li>
+</ul>
+<h2 id="apps-and-developer-tools">Apps and developer tools</h2>
+<ul>
+<li><strong>Databricks Apps</strong>, App Spaces, Serverless Micro Apps and Genie App Builder (Private Preview)`</li>
+<li><strong>Notebooks</strong>: multi-language (Python, SQL, Scala, R) and real-time collaborative`</li>
+<li><strong>Git folders</strong> (formerly Repos)`</li>
+<li><strong>Databricks Asset Bundles</strong>: infrastructure-as-code style CI/CD`</li>
+<li><strong>Automation</strong>: Databricks CLI, SDKs (Python, Java and Go), REST APIs and Terraform provider`</li>
+<li><strong>Databricks Connect</strong> and VS Code / JetBrains extensions`</li>
+<li><strong>Drivers and integrations</strong>: JDBC/ODBC drivers, SQL connectors and dbt integration`</li>
+<li><strong>Partner Connect</strong>`</li>
+</ul>
+<h2 id="security-and-administration">Security and administration</h2>
+<ul>
+<li><strong>Identity</strong>: SSO, SCIM, identity federation (enabled by default for all new workspaces), service principals, OAuth and PAT policies <a href="https://docs.databricks.com/aws/en/release-notes/product/">databricks</a>`</li>
+<li><strong>Networking</strong>: IP access lists, Private Link, customer-managed VPC/VNet, and serverless egress controls`</li>
+<li><strong>Compliance and encryption</strong>: customer-managed keys, compliance security profile, and enhanced security monitoring`</li>
+<li><strong>Cost management</strong>: budgets, budget policies, usage dashboards and tagging`</li>
+</ul>
+<h2 id="industry-solutions-and-editions">Industry solutions and editions</h2>
+<ul>
+<li><strong>CustomerLake</strong>: Agentic customer data platform (CDP) built natively on the lakehouse <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Lakewatch</strong>: Agentic security information and event management (SIEM), with the Panther acquisition pending <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Free Edition</strong>: now includes Genie Code, serverless GPUs, Lakebase, Agent Bricks and LakeFlow Designer <a href="https://www.flexera.com/blog/perspectives/databricks-data-ai-summit-2026/">flexera</a>`</li>
+<li><strong>Solution Accelerators</strong>`</li>
+</ul>
+
+
+        <footer class="colophon">
+            <span class="colophon-title">Colophon</span>
+            1495 words &middot; 7m read<br>
+            Written as a markdown note in Obsidian.
+            Built into this page by a Python script on 2026-10-21.
+        </footer>
+    </article>
+
+    <div class="more">
+        <section class="box">
+        <h2 class="box-title">Pages</h2>
+        <ul class="list">
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="index.html">everprep</a>
+            </li>
+            
+            <li>
+                <span class="muted">14m read</span>
+                <a href="cloud-aws-services-list.html">cloud - aws services list</a>
+            </li>
+            
+            <li>
+                <span class="muted">11m read</span>
+                <a href="cloud-databricks-services-and-how-they-work.html">cloud - Databricks Services and How They Work</a>
+            </li>
+            
+            <li>
+                <span class="muted">3m read</span>
+                <a href="data-engineering.html">data engineering</a>
+            </li>
+            
+            <li>
+                <span class="muted">4m read</span>
+                <a href="data-modelling.html">data modelling</a>
+            </li>
+            
+            <li>
+                <span class="muted">2m read</span>
+                <a href="data-pipelines.html">data pipelines</a>
+            </li>
+            
+            <li class="is-current">
+                <span class="muted">7m read</span>
+                <a href="databricks.html">databricks</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="delta-lake.html">Delta lake</a>
+            </li>
+            
+            <li>
+                <span class="muted">13m read</span>
+                <a href="delta-lake-performance-optimization-and-maintenance.html">Delta Lake - performance optimization and maintenance</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="interview-rounds.html">interview rounds</a>
+            </li>
+            
+            <li>
+                <span class="muted">10m read</span>
+                <a href="python-leetcode.html">python - leetcode</a>
+            </li>
+            
+            <li>
+                <span class="muted">24m read</span>
+                <a href="spark-code.html">spark - code</a>
+            </li>
+            
+            <li>
+                <span class="muted">14m read</span>
+                <a href="spark-theory.html">spark - theory</a>
+            </li>
+            
+            <li>
+                <span class="muted">1m read</span>
+                <a href="spark-qns.html">spark qns</a>
+            </li>
+            
+            <li>
+                <span class="muted">12m read</span>
+                <a href="sql.html">sql</a>
+            </li>
+            
+        </ul>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <p><a href="index.html">&larr; everprep</a></p>
+        <p>Generated on 21 Oct 2026 from markdown notes.</p>
+    </footer>
+
+</div>
+
+    <script>
+        // Obsidian callouts: "> [!NOTE] Optional title" blockquotes become labelled boxes.
+        (function () {
+            const marker = /^\s*\[!(\w+)\][+-]?[ \t]*([^\n<]*)(?:\s*<br\s*\/?>|\n)?/;
+            document.querySelectorAll(".prose blockquote").forEach(quote => {
+                const first = quote.querySelector("p");
+                if (!first) return;
+                const match = first.innerHTML.match(marker);
+                if (!match) return;
+
+                const kind = match[1].toLowerCase();
+                first.innerHTML = first.innerHTML.slice(match[0].length).trim();
+                if (!first.innerHTML) first.remove();
+
+                const title = document.createElement("p");
+                title.className = "callout-title";
+                const label = document.createElement("span");
+                label.className = "callout-kind";
+                label.textContent = kind;
+                title.appendChild(label);
+                if (match[2].trim()) title.appendChild(document.createTextNode(match[2].trim()));
+
+                quote.classList.add("callout", "callout--" + kind);
+                quote.prepend(title);
+            });
+        })();
+
+        // Reading progress: a thin bar across the top of the page.
+        (function () {
+            const bar = document.querySelector(".progress span");
+            if (!bar) return;
+            let queued = false;
+            function update() {
+                queued = false;
+                const max = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+                bar.style.transform = "scaleX(" + ratio + ")";
+            }
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(update);
+            }
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            update();
+        })();
+
+        (function () {
+            const tocScroll = document.querySelector(".toc-scroll");
+            const tocLinks = document.querySelectorAll('.toc a[href^="#"]');
+            if (!tocLinks.length) return;
+
+            // Pair every TOC link with the heading it points at, in document order.
+            const entries = [];
+            tocLinks.forEach(link => {
+                const id = decodeURIComponent(link.hash.slice(1));
+                const heading = id ? document.getElementById(id) : null;
+                if (heading) entries.push({ heading, link });
+            });
+            if (!entries.length) return;
+
+            entries.sort((a, b) =>
+                a.heading.compareDocumentPosition(b.heading) &
+                    Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+            );
+
+            const smooth = !window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+            ).matches;
+
+            // Don't yank the TOC around while the reader is scrolling it by hand.
+            let handScrolledAt = 0;
+            if (tocScroll) {
+                ["wheel", "touchstart", "pointerdown"].forEach(evt =>
+                    tocScroll.addEventListener(
+                        evt,
+                        () => { handScrolledAt = Date.now(); },
+                        { passive: true }
+                    )
+                );
+            }
+
+            // Scroll the TOC's own container (never the page) so the active
+            // link sits in the middle of the list.
+            function revealInToc(link) {
+                if (!tocScroll) return;
+                // Not scrollable: short TOC, or the stacked mobile layout.
+                if (tocScroll.scrollHeight <= tocScroll.clientHeight) return;
+                if (Date.now() - handScrolledAt < 1500) return;
+
+                const containerTop = tocScroll.getBoundingClientRect().top;
+                const linkRect = link.getBoundingClientRect();
+                const wanted =
+                    tocScroll.scrollTop +
+                    (linkRect.top - containerTop) -
+                    (tocScroll.clientHeight - linkRect.height) / 2;
+
+                const top = Math.max(
+                    0,
+                    Math.min(
+                        wanted,
+                        tocScroll.scrollHeight - tocScroll.clientHeight
+                    )
+                );
+
+                if (Math.abs(top - tocScroll.scrollTop) < 2) return;
+                tocScroll.scrollTo({
+                    top: top,
+                    behavior: smooth ? "smooth" : "auto"
+                });
+            }
+
+            let active = null;
+
+            function setActive(entry) {
+                if (entry === active) return;
+                if (active) active.link.classList.remove("highlight");
+                entry.link.classList.add("highlight");
+                active = entry;
+                revealInToc(entry.link);
+            }
+
+            function update() {
+                // The heading that most recently crossed the reading line is
+                // the one being read.
+                const readingLine = window.innerHeight * 0.25;
+                let current = entries[0];
+
+                for (const entry of entries) {
+                    if (entry.heading.getBoundingClientRect().top > readingLine) break;
+                    current = entry;
+                }
+
+                // At the page bottom the last heading may never reach the
+                // reading line, so claim it explicitly.
+                const atBottom =
+                    window.innerHeight + window.scrollY >=
+                    document.documentElement.scrollHeight - 2;
+                if (atBottom) current = entries[entries.length - 1];
+
+                setActive(current);
+            }
+
+            let queued = false;
+            function schedule() {
+                if (queued) return;
+                queued = true;
+                requestAnimationFrame(() => {
+                    queued = false;
+                    update();
+                });
+            }
+
+            window.addEventListener("scroll", schedule, { passive: true });
+            window.addEventListener("resize", schedule, { passive: true });
+            window.addEventListener("load", schedule);
+            update();
+        })();
+    </script>
+</body>
+</html>
